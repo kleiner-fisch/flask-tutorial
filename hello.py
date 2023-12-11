@@ -39,6 +39,13 @@ def play_card(game_id, player_id, line_id, card_name):
         return e.args[0], 422 
 
 
+@app.get('/<int:game_id>')
+def get_game(game_id):
+    # TODO implement me
+    ctrl = get_ctrl(game_id)
+    return jsonify(ctrl.get_hand(player_id))
+
+
 @app.get('/<int:game_id>/hands/<int:player_id>')
 def get_hand(game_id, player_id):
     ctrl = get_ctrl(game_id)
@@ -46,7 +53,6 @@ def get_hand(game_id, player_id):
 
 @app.patch('/<int:game_id>/hands/<int:player_id>')
 def update_hand(game_id, player_id):
-    # JSON Body desribing how many cards to put back
     ctrl = get_ctrl(game_id)
     content = request.json
     ctrl.put_cards_back(content.get('put_back', []), player_id)

@@ -18,7 +18,7 @@ Create game etc
 * `/game`
 
 #### Play a card
-* Path: `/{gameID}/card/{player-id}/{line-id}/{cardName}`
+* Path: `/{gameID}/card/{player-id}/{line-id}/{card-name}`
 * Method: PATCH
 * Body: Examples:
 ** For most cards: ```{}```
@@ -34,6 +34,8 @@ Create game etc
 
 
 #### Make and Reject/Accept Claims
+**TOBEDONE**
+
 * Path: `/{gameID}/{player-id}/{line-id}`
 * Method: PATCH
 * Body: Examples:
@@ -69,7 +71,7 @@ Create game etc
 
 #### Draw/Put back cards
 This either happens at the end of the turn, when a single card is drawn, or because SCOUT has been played, when first 3 cards are drawn, and afterwards two cards are put back. This is the only case where cards are put back.
-* Path: `/battle-line/{gameID}/hands/{playerID}`
+* Path: `/{gameID}/hands/{playerID}`
 * Method: PATCH
 * Body: Examples
 ** ```{
@@ -98,3 +100,5 @@ This either happens at the end of the turn, when a single card is drawn, or beca
 - Getting the current hand: `curl -X GET http://127.0.0.1:5000/0/hands/0`
 - Put back some cards onto a stack from a hand: `curl -X PATCH http://127.0.0.1:5000/0/hands/0   -H 'Content-Type: application/json'   -d '{"put_back":["Y1", "Alexander"]}'`
 - Draw some tactic cards: `curl -X PATCH http://127.0.0.1:5000/0/hands/0   -H 'Content-Type: application/json'   -d '{"num_tactic_cards":1}'`
+- Play a number card: `curl -X PATCH http://127.0.0.1:5000/0/card/0/0/F7   -H 'Content-Type: application/json'   -d '{}'`
+- Play a guile tactic: `curl -X PATCH http://127.0.0.1:5000/0/card/0/1/DESERTER   -H 'Content-Type: application/json'   -d '{"affected_card":"SHIELD_BEARER"}'`

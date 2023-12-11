@@ -9,15 +9,12 @@ class Game_Controller:
     def __init__(self, p0, p1, game_id=None):
         '''for easier debugging we allow passing game_id
         TODO: how should game_ids be properly handled??'''
-        self.game = Game(p0, p1)
-        self.game_id = game_id if game_id != None else uuid.uuid4()
+        game_id = game_id if game_id != None else uuid.uuid4()
+        self.game = Game(p0, p1, game_id)
+        
     
     def get_game_id(self):
-        return self.game_id
-
-    def play_card(self, pid, line_id, card_name):
-        raise NotImplementedError
-                  
+        return self.game.game_id
 
 
 
@@ -75,21 +72,25 @@ class Game_Controller:
     def remove_card(self, card):
         '''finds <card> and removes it from its line (usually to be moved somewhere else).
         It is an error if the card is not found among the battle lines'''
-        lines = self.get_all_lines()
-        for line in lines:
-            try:
-                # When the card is not present the return statement is not executed
-                line.remove(card)
-                return
-            except ValueError:
-                pass
-        raise ValueError('Card to delete not found' + str(card))
+        if not any(map(lambda line: line.remove_card(card), self.game.lines)):
+            raise ValueError('Card to delete not found' + str(card))
 
-    def get_all_lines(self):
-        '''returns a list of all lines. 
-        <result> is a list of lists and has lines from both players'''
-        super_list = self.game.lines.values()
-        return [line for lines in super_list for line in lines]
+        # lines = self.get_all_lines()
+        # for line in lines:
+        #     try:
+        #         # When the card is not present the return statement is not executed
+        #         line.remove(card)
+        #         return
+        #     except ValueError:
+        #         pass
+
+
+
+    # def get_all_lines(self):
+    #     '''returns a list of all lines. 
+    #     <result> is a list of lists and has lines from both players'''
+    #     super_list = self.game.lines.values()
+    #     return [line for lines in super_list for line in lines]
 
 
     def move_card_to(self, card, player_id, line_id):
@@ -97,10 +98,10 @@ class Game_Controller:
         self.remove_card(card)
         # TODO it easily might happen to accidentally use line_id instead of player_id or vice versa. 
         #   That will be difficult to track down. Perhaps use enums to have type safety?
-        self.game.lines[player_id][line_id].append(card)
+        self.game.lines[line_id].sides[player_id].append(card)
 
     def add_card_to_line(self, player, line, card):
-        self.game.lines[player][line].append(card)
+        self.game.lines[line].sides[player].append(card)
 
 
     def validate_played_card(self, player_id, line_id, card, other_card):
