@@ -1,5 +1,5 @@
-from flask import Flask, jsonify, request
-#from game import Game
+from flask import Flask, jsonify, request, make_response
+
 from game_controller import Game_Controller
 
 import pdb
@@ -23,10 +23,20 @@ def get_ctrl(game_id):
     return id2ctrl[game_id]
 
 
-@app.patch('/<int:game_id>/card/<int:player_id>/<int:line_id>/<int:card_name>')
-def play_card(game_id, player_id, line_id, card_name):
-    raise NotImplementedError
+# TODO currently the plan is to use uuid for ids. This may be unpractibable as URIs may be terribly long if we chain such ids...
+#   - uuid as ids would require to use uuid as type in the path, i.e. use <uuid:game_id>
 
+
+@app.patch('/<int:game_id>/card/<int:player_id>/<int:line_id>/<string:card_name>')
+def play_card(game_id, player_id, line_id, card_name):
+    ctrl = get_ctrl(game_id)
+    try:
+        content = request.json
+        other_card = content.get('affected_card', None)
+        ctrl.play_card(player_id, line_id, card_name, other_card)
+        return ''
+    except ValueError as e:
+        return e.args[0], 422 
 
 
 @app.get('/<int:game_id>/hands/<int:player_id>')

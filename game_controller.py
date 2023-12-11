@@ -1,5 +1,5 @@
 from game import Game
-from game import HAND_SIZE
+from game import  GUILE_TACTICS
 
 import uuid
 
@@ -19,11 +19,7 @@ class Game_Controller:
         raise NotImplementedError
                   
 
-    def deal_cards(self):
-        g = self.game
-        g.hands[g.p0] = g.numbers_deck[:g.HAND_SIZE]
-        g.hands[g.p1] = g.numbers_deck[HAND_SIZE:2*HAND_SIZE]
-        g.numbers_deck = g.numbers_deck[2*HAND_SIZE:]
+
 
     def put_cards_back(self, cards, pid):
         '''takes the given cards from the player and puts them back into thei respective decks.
@@ -54,3 +50,69 @@ class Game_Controller:
 
     def get_hand(self, player_id):
         return self.game.hands[player_id]
+    
+    def play_card(self, player_id, line_id, card, other_card=None):
+        '''plays the given card in the specified line for the given player.
+        Note that <other_card> is the name of a card that is affected by <card> (only relevant for a few tactics)
+        - checks that the move is legal
+        - performs all steps necessary to play the card
+        - tracks in the game state whether further subturn steps are necessary by player (scout processing)'''
+        # TODO rename line_id to line and similar for other variables
+        self.validate_played_card(player_id, line_id, card, other_card)
+        if card in ["REDEPLOY", "TRAITOR"]:
+            self.move_card_to(other_card, player_id, line_id)
+        elif card == "DESERTER":
+            self.desert_card(other_card)
+        g  = self.game
+        g.hands[player_id].remove(card)
+        self.add_card_to_line(player_id, line_id, card)
+       
+    def desert_card(self, card):
+        '''moves the specified <card> from its battle line to a pool of public but unused and unusable cards'''
+        self.remove_card(card)
+        self.game.public_cards.append(card)
+    
+    def remove_card(self, card):
+        '''finds <card> and removes it from its line (usually to be moved somewhere else).
+        It is an error if the card is not found among the battle lines'''
+        lines = self.get_all_lines()
+        for line in lines:
+            try:
+                # When the card is not present the return statement is not executed
+                line.remove(card)
+                return
+            except ValueError:
+                pass
+        raise ValueError('Card to delete not found' + str(card))
+
+    def get_all_lines(self):
+        '''returns a list of all lines. 
+        <result> is a list of lists and has lines from both players'''
+        super_list = self.game.lines.values()
+        return [line for lines in super_list for line in lines]
+
+
+    def move_card_to(self, card, player_id, line_id):
+        '''moves the <card> to the given <line> on the side of <player_id>'''
+        self.remove_card(card)
+        # TODO it easily might happen to accidentally use line_id instead of player_id or vice versa. 
+        #   That will be difficult to track down. Perhaps use enums to have type safety?
+        self.game.lines[player_id][line_id].append(card)
+
+    def add_card_to_line(self, player, line, card):
+        self.game.lines[player][line].append(card)
+
+
+    def validate_played_card(self, player_id, line_id, card, other_card):
+        '''Checks that
+        - the card is allowed to be played in the current state 
+            - not too many tactics played
+            - it is that players turn
+            - card is in players hand
+            - no other action expected (resolving SCOUT)
+            - other_card is only non-None if actually needed (REDEPLOY, TRAITOR, DESERTER) 
+        - the card can be played in the given line
+            - the players section of the given line is not full (taking into consideration the tactics, e.g. MUD)
+            - the line is not closed
+        returns True if the move is legal, Fales otherwise'''
+        #raise ValueError('FOOOO')
