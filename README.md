@@ -1,6 +1,11 @@
 
 
 
+### Requirements
+The following versions of packages are used:
+- Flask==3.0.0
+- marshmallow==3.20.1
+- parameterized==0.9.0
 
 ### Open Questions
 #### Usage of Endpoints
