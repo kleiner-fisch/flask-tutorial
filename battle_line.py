@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, request, make_response
-
+from game_schema import Game_Schema
 from game_controller import Game_Controller
 
 import pdb
@@ -10,13 +10,6 @@ id2ctrl = dict()
 player0 = 0
 player1 = 1
 
-#def getGame(game_id):
-#    return games[game_id]
-
-# ENDPOINTS
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World!!!</p>"
 
 
 def get_ctrl(game_id):
@@ -41,10 +34,10 @@ def play_card(game_id, player_id, line_id, card_name):
 
 @app.get('/<int:game_id>')
 def get_game(game_id):
-    # TODO implement me
-    ctrl = get_ctrl(game_id)
-    return jsonify(ctrl.get_hand(player_id))
-
+    # pdb.set_trace()
+    game = get_ctrl(game_id).game
+    schema = Game_Schema()
+    return schema.dump(game)
 
 @app.get('/<int:game_id>/hands/<int:player_id>')
 def get_hand(game_id, player_id):
@@ -66,7 +59,6 @@ def initiate_state(player0, player1, game_id):
     ctrl = Game_Controller(player0, player1, game_id=game_id)
     id2ctrl[ctrl.get_game_id()] = ctrl
     print(id2ctrl)
-#    games[0].hands[player0] = ["B1", "B2"]
 
 
 if __name__ == "__main__":

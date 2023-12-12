@@ -75,23 +75,6 @@ class Game_Controller:
         if not any(map(lambda line: line.remove_card(card), self.game.lines)):
             raise ValueError('Card to delete not found' + str(card))
 
-        # lines = self.get_all_lines()
-        # for line in lines:
-        #     try:
-        #         # When the card is not present the return statement is not executed
-        #         line.remove(card)
-        #         return
-        #     except ValueError:
-        #         pass
-
-
-
-    # def get_all_lines(self):
-    #     '''returns a list of all lines. 
-    #     <result> is a list of lists and has lines from both players'''
-    #     super_list = self.game.lines.values()
-    #     return [line for lines in super_list for line in lines]
-
 
     def move_card_to(self, card, player_id, line_id):
         '''moves the <card> to the given <line> on the side of <player_id>'''

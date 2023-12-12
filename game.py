@@ -13,12 +13,14 @@ NUMBERS_CARDS = list(map(''.join, \
 
 class Game:
 
-    def __init__(self, p0, p1, game_id):
+    def __init__(self, p0, p1, game_id, starting_player=None):
+        self.current_player = starting_player or p0
         self.game_id = game_id
         self.hands = dict()
         self.p0 = p0
         self.p1 = p1
-        #self.lines = {p0:[[] for x in range(9)], p1 :[[] for x in range(9)]}
+        self.claim = dict()
+        self.unresolved_scout = False
         self.lines = [Line(p0, p1) for x in range(9)]
         self.initialize_game()
         self.public_cards = []
@@ -37,8 +39,6 @@ class Game:
     def generate_decks(self):
         self.tactics_deck = list(ALL_TACTICS)
         random.shuffle(self.tactics_deck)
-        #colors = ["B", "Y", "R", "O", "G", "L"]
-        #numbers = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
         self.numbers_deck = list(NUMBERS_CARDS)
         random.shuffle(self.numbers_deck)
 

@@ -97,6 +97,7 @@ This either happens at the end of the turn, when a single card is drawn, or beca
 
 ### Manually Playing Around
 
+- Get the state of the game with id 0 (only the state known to both players): `curl -X GET http://127.0.0.1:5000/0`
 - Getting the current hand: `curl -X GET http://127.0.0.1:5000/0/hands/0`
 - Put back some cards onto a stack from a hand: `curl -X PATCH http://127.0.0.1:5000/0/hands/0   -H 'Content-Type: application/json'   -d '{"put_back":["Y1", "Alexander"]}'`
 - Draw some tactic cards: `curl -X PATCH http://127.0.0.1:5000/0/hands/0   -H 'Content-Type: application/json'   -d '{"num_tactic_cards":1}'`
