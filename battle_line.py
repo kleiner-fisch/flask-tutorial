@@ -20,6 +20,9 @@ def get_ctrl(game_id):
 #   - uuid as ids would require to use uuid as type in the path, i.e. use <uuid:game_id>
 
 
+# TODO game creation
+# TODO winning of game
+
 @app.patch('/<int:game_id>/card/<int:player_id>/<int:line_id>/<string:card_name>')
 def play_card(game_id, player_id, line_id, card_name):
     ctrl = get_ctrl(game_id)
@@ -27,6 +30,19 @@ def play_card(game_id, player_id, line_id, card_name):
         content = request.json
         other_card = content.get('affected_card', None)
         ctrl.play_card(player_id, line_id, card_name, other_card)
+        return ''
+    except ValueError as e:
+        return e.args[0], 422 
+    
+
+@app.patch('/<int:game_id>/<int:player_id>/<int:line_id>')
+def manage_claim(game_id, player_id, line_id):
+    ctrl = get_ctrl(game_id)
+    try:
+        content = request.json
+        action = content.get('action', None)
+        counter_example = content.get('counter_example', None)
+        ctrl.manage_claim(player_id, line_id, action, counter_example)
         return ''
     except ValueError as e:
         return e.args[0], 422 

@@ -2,13 +2,10 @@
 import itertools as iter
 import random
 from line import Line
+from cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS
 
 HAND_SIZE = 7
-ALL_TACTICS = ["ALEXANDER", "CAVALRY", "DARIUS", "MUD", "SHIELD_BEARER", "FOG", "SCOUT", "REDEPLOY", "DESERTER", "TRAITOR"]
-GUILE_TACTICS= ["SCOUT", "REDEPLOY", "DESERTER", "TRAITOR"]
-NUMBERS_CARDS = list(map(''.join, \
-                    iter.product(["A", "B", "C", "D", "E", "F"], \
-                    ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])))
+
 
 
 class Game:

@@ -1,5 +1,5 @@
 from game import Game
-from game import  GUILE_TACTICS
+from cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS
 
 import uuid
 
@@ -16,7 +16,28 @@ class Game_Controller:
     def get_game_id(self):
         return self.game.game_id
 
+    def manage_claim(sefl, player_id, line_id, action, counter_example):
+        '''claim interactions are: MAKE_CLAIM and REJECT_CLAIM
+        For REJECT_CLAIM we assume <counter_example> has a sequence of cards serving as a legal counter example to the existing claim.
+        For MAKE_CLAIM <counter_example> should be set to None
+        This method validates the received data'''
 
+    def validate_claim_inputs(self, player_id, line_id, action, counter_example):
+        '''Validates that 
+        - the player is performing the expected action (REJECT_CLAIM if there exists a claim by the other player, otherwise MAKE_CLAIM)
+        - For MAKE_CLAIM, it is this players turn
+        - For MAKE_CLAIM, the claimed line is open (not won by either player)
+        - For REJECT_CLAIM that the counter_example is valid
+            - If MUD has been played in this line, than the counter_example must have 4 cards, otherwise 3 cards
+        - For REJECT_CLAIM that the counter_example is an extension of the rejecting players side of that line (played_cards + playable_cards)
+        - For REJECT_CLAIM that the playerable_cards only involve number cards'''
+        pass
+
+    def is_counter_example_valid(self, other_player, line_id, counter_example):
+        '''Checks that the counter_example
+        - could possibly occur in the future, given the public information
+        - is strictly stronger than <other_player> side of that line '''
+        pass
 
     def put_cards_back(self, cards, pid):
         '''takes the given cards from the player and puts them back into thei respective decks.

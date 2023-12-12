@@ -17,8 +17,40 @@ Create game etc
 
 * `/game`
 
+
+#### Get Game State
+* Path: `/{game-id}`
+* Method: GET
+* Body: No body
+
+##### Response
+* HTTP Status
+** 200 OK if action was succesful
+*** Body: 
+{
+  "claim": {},
+  "current_player": 0,
+  "game_id": 0,
+  "lines": [ LINE ],
+  "p0": 0,
+  "p1": 1,
+  "public_cards": [],
+  "unresolved_scout": false
+}
+with LINE being 
+    {
+      "sides": {
+        "0": ["A4", "ALEXANDER"],
+        "1": []
+      },
+      "won_by": null
+    }
+
+** 404 NOT FOUND if user is not authorized
+
+
 #### Play a card
-* Path: `/{gameID}/card/{player-id}/{line-id}/{card-name}`
+* Path: `/{game-id}/card/{player-id}/{line-id}/{card-name}`
 * Method: PATCH
 * Body: Examples:
 ** For most cards: ```{}```
