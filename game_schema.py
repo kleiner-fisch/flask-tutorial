@@ -12,6 +12,7 @@ class Game_Schema(Schema):
     public_cards = fields.List(fields.Str())
     unresolved_scout = fields.Bool()
     claim = fields.Dict(keys=fields.Str(), values=fields.Int())
+    winner = fields.Int()
 
         # TODO Non urgent : for players hands we need to show the number of cards of each type. 
         #   Probably also for the decks

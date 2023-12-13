@@ -77,10 +77,10 @@ with LINE being
 * Method: PATCH
 * Body: Examples:
 ** ```{
-        "action": "CLAIM
+        "action": "CLAIM"
     }```
 ** ```{
-        "action": "REJECT_CLAIM,
+        "action": "REJECT_CLAIM",
         "counterExample": ["CARD1", "CARD2", "CARD3"]
     }```
 

@@ -21,6 +21,7 @@ class Game:
         self.lines = [Line(p0, p1) for x in range(9)]
         self.initialize_game()
         self.public_cards = []
+        self.winner = None
 
 
     def initialize_game(self):
