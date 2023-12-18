@@ -6,6 +6,7 @@ The following versions of packages are used:
 - Flask==3.0.0
 - marshmallow==3.20.1
 - parameterized==0.9.0
+- SQLAlchemy==2.0.23
 
 ### Open Questions
 #### Usage of Endpoints
@@ -140,3 +141,5 @@ This either happens at the end of the turn, when a single card is drawn, or beca
 - Draw some tactic cards: `curl -X PATCH http://127.0.0.1:5000/0/hands/0   -H 'Content-Type: application/json'   -d '{"num_tactic_cards":1}'`
 - Play a number card: `curl -X PATCH http://127.0.0.1:5000/0/card/0/0/F7   -H 'Content-Type: application/json'   -d '{}'`
 - Play a guile tactic: `curl -X PATCH http://127.0.0.1:5000/0/card/0/1/DESERTER   -H 'Content-Type: application/json'   -d '{"affected_card":"SHIELD_BEARER"}'`
+
+

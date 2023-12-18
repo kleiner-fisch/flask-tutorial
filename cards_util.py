@@ -2,7 +2,7 @@
 import itertools as iter
 
 
-ALL_TACTICS = ["ALEXANDER", "CAVALRY", "DARIUS", "MUD", "SHIELD_BEARER", "FOG", "SCOUT", "REDEPLOY", "DESERTER", "TRAITOR"]
+ALL_TACTICS = ["ALEXANDER", "DARIUS", "CAVALRY",  "SHIELD_BEARER", "FOG", "MUD", "SCOUT", "REDEPLOY", "DESERTER", "TRAITOR"]
 GUILE_TACTICS= ["SCOUT", "REDEPLOY", "DESERTER", "TRAITOR"]
 NUMBERS_CARDS = list(map(''.join, \
                     iter.product(["A", "B", "C", "D", "E", "F"], \
