@@ -10,25 +10,35 @@ HAND_SIZE = 7
 
 class Game:
 
-    def __init__(self, p0, p1, game_id, starting_player=None):
+    # TODO rename variables to p1 and p2 globally
+    def __init__(self, p0, p1, game_id, starting_player=None,
+                 p0_hand=[], p1_hand=[],
+                 claim=dict(), unresolved_scout=False,
+                 winner=None, public_cards=[],
+                 lines = []):
         self.current_player = starting_player or p0
         self.game_id = game_id
-        self.hands = dict()
         self.p0 = p0
         self.p1 = p1
-        self.claim = dict()
-        self.unresolved_scout = False
-        self.lines = [Line(p0, p1) for x in range(9)]
-        self.initialize_game()
-        self.public_cards = []
-        self.winner = None
+        if p0_hand == [] and p1_hand == []:
+            self.initialize_cards()
+        elif p0_hand != [] and p1_hand != []:
+            self.hands = {self.p0: p0_hand, self.p1 : p1_hand}
+        else:
+            raise ValueError("got unpexepcted hand. P0 hand : " + str(p0_hand) + " p1_hand: " +str(p1_hand))
+        self.claim = claim
+        self.unresolved_scout = unresolved_scout
+        self.lines = lines or [Line(p0, p1) for x in range(9)]
+        self.public_cards = public_cards
+        self.winner = winner
 
 
-    def initialize_game(self):
+    def initialize_cards(self):
         self.generate_decks()
         self.deal_cards()
 
     def deal_cards(self):
+        self.hands = dict()
         self.hands[self.p0] = self.numbers_deck[:HAND_SIZE]
         self.hands[self.p1] = self.numbers_deck[HAND_SIZE:2*HAND_SIZE]
         self.numbers_deck = self.numbers_deck[2*HAND_SIZE:]

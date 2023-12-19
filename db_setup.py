@@ -30,22 +30,30 @@ user_table = Table(
 
 # has the cards of the lines
 line_cards_table = Table(
-    "line_cards",
+    "line_card",
     metadata_obj,
     Column("id", Integer, primary_key=True),
-    # number from 1 to 9
-    Column("line_id", Integer, nullable=False),
-    Column("game_id", Integer, ForeignKey("current_games.id"),nullable=False),
     Column("pid",Integer, ForeignKey("user_account.id"), nullable=False),    
+    Column("line_id",Integer, ForeignKey("user_account.id"), nullable=False),       
     Column("card", Integer, nullable=False),
 )
 
-
-hand_cards_table = Table(
-    "hand_cards",
+line_table = Table(
+    "line",
     metadata_obj,
     Column("id", Integer, primary_key=True),
-    Column("game_id", Integer, ForeignKey("current_games.id"),nullable=False),
+    # number from 0 to 8
+    Column("line_number", Integer, nullable=False),
+    Column("game_id", Integer, ForeignKey("game.id"),nullable=False),
+    Column("has_winner", Boolean, nullable=False),
+    Column("winner", Integer, ForeignKey("user_account.id"), nullable=True),
+)
+
+hand_card_table = Table(
+    "hand_card",
+    metadata_obj,
+    Column("id", Integer, primary_key=True),
+    Column("game_id", Integer, ForeignKey("game.id"),nullable=False),
     Column("pid",Integer, ForeignKey("user_account.id"), nullable=False),    
     Column("card", Integer, nullable=False),
 )
@@ -55,7 +63,7 @@ hand_cards_table = Table(
 #### TODO Look up how to define this database! ERP design.. 1-to-n or m-n relationships...
 
 game_table = Table(
-    "current_games",
+    "game",
     metadata_obj,
     Column("id", Integer, primary_key=True),
     Column("p1_pid", ForeignKey("user_account.id"), nullable=False),    
