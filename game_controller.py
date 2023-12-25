@@ -2,9 +2,15 @@ from game import Game
 from cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS, JOKERS
 import cards_util
 from invalid_user_input_error import InvalidUserInputError
-
+import random
 
 import uuid
+
+
+def create_game(p1_pid, p2_pid, starting_player=None):
+        '''creates a new game while choosing a random starting plaer if none is given'''
+        starting_player = starting_player or random.sample([p1_pid, p2_pid], 1)[0]
+        return Game(p1_pid, p2_pid, starting_player=starting_player)
 
 
 class Game_Controller:
