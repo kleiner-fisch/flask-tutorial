@@ -2,7 +2,7 @@ from flask import Flask, jsonify, request, make_response
 from game_schema import Game_Schema
 from game_controller import Game_Controller
 import game_controller
-from db_interaction import DB_Interaction
+from db_wrapper import DB_Wrapper
 
 import pdb
 
@@ -12,9 +12,6 @@ def hello_world():
     return "<p>Hello, World!</p>"
 
 id2ctrl = dict()
-
-db = None
-
 
 
 def get_ctrl(game_id):
@@ -60,7 +57,7 @@ def create_game():
         pdb.set_trace()
         p1_pid, p2_pid = content.get('player1_id'), content.get('player2_id')
         starting_player = content.get('starting_player', None)
-        game_id = db.create_game(p1_pid, p2_pid, starting_player)
+        game_id = app.db.create_game(p1_pid, p2_pid, starting_player)
         return jsonify({'game_id': game_id})
     except ValueError as e:
         return e.args[0], 422 
@@ -68,7 +65,7 @@ def create_game():
 
 @app.get('/game/<int:game_id>')
 def get_game(game_id):   
-    game = db.get_game(game_id)
+    game = app.db.get_game(game_id)
     schema = Game_Schema()
     return schema.dump(game)
 
@@ -89,5 +86,5 @@ def update_hand(game_id, player_id):
 
 if __name__ == "__main__":
     # app.run(host='0.0.0.0', debug=True)
-    db = DB_Interaction()
+    app.db = DB_Wrapper()
     app.run(host='localhost', debug=True)

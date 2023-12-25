@@ -16,7 +16,8 @@ from sqlalchemy import create_engine
 # ALEXANDER, DARIUS, CAVALRY, SHIELD_BEARER, FOG, MUD, SCOUT, REDEPLOY, DESERTER, TRAITOR
 
 
-engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
+engine = create_engine("sqlite+pysqlite:///battle_line.db", echo=True)
+
 
 metadata_obj = MetaData()
 

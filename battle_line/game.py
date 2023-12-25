@@ -1,8 +1,8 @@
 
 import itertools as iter
 import random
-from .line import Line
-from .cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS
+from line import Line
+from cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS
 
 HAND_SIZE = 7
 

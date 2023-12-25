@@ -1,8 +1,8 @@
 import sqlalchemy
 import pdb
-from .game import Game 
-from .line import Line
-from . import game_controller
+from game import Game 
+from line import Line
+import game_controller
 from flask import current_app, g
 import click
 
@@ -23,42 +23,12 @@ from sqlalchemy import create_engine
 # ALEXANDER, DARIUS, CAVALRY, SHIELD_BEARER, FOG, MUD, SCOUT, REDEPLOY, DESERTER, TRAITOR
 
 
-def get_db():
-    if 'db' not in g:
-        g.db = DB_Wrapper()
-    return g.db
-
-
-
-def close_db(e=None):
-    db = g.pop('db', None)
-
-    if db is not None:
-        db.close()
-
-
-def init_db():
-    db = get_db()
-
-def init_app(app):
-    app.teardown_appcontext(close_db)
-    app.cli.add_command(init_db_command)
-
-
-@click.command('init-db')
-def init_db_command():
-    """Clear the existing data and create new tables."""
-    init_db()
-    click.echo('Initialized the database.')
-
-
-
 
 class DB_Wrapper:
 
 
     def __init__(self):
-        self.engine = create_engine("sqlite+pysqlite:///:memory:", echo=True)
+        self.engine = create_engine("sqlite+pysqlite:///battle_line.db", echo=True)
 
         self.metadata_obj = MetaData()
 
@@ -128,8 +98,6 @@ class DB_Wrapper:
 
         self.metadata_obj.create_all(self.engine)
 
-    def close(self):
-        pass
 
 
     def get_game(self, game_id):

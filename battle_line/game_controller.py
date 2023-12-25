@@ -1,7 +1,7 @@
-from .game import Game
-from .cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS, JOKERS
-from . import cards_util
-from .invalid_user_input_error import InvalidUserInputError
+from game import Game
+from cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS, JOKERS
+import cards_util
+from invalid_user_input_error import InvalidUserInputError
 import random
 
 import uuid
