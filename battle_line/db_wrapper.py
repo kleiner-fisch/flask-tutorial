@@ -5,12 +5,16 @@ from line import Line
 import game_controller
 from flask import current_app, g
 import click
+from user import User
 
 
 from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, Integer, String, Boolean
 from sqlalchemy import ForeignKey
 from sqlalchemy import create_engine
+
+from werkzeug.security import check_password_hash, generate_password_hash
+
 
 # The card integers refer to positions in the following sequence of card names:
 #
@@ -36,8 +40,9 @@ class DB_Wrapper:
             "user_account",
             self.metadata_obj,
             Column("id", Integer, primary_key=True),
-            Column("name", String(30), nullable=False),
+            Column("name", String(30),unique=True, nullable=False),
             Column("mail_address", String, nullable=False),
+            Column("password", String, nullable=False),
         )
 
         # has the cards of the lines
@@ -159,3 +164,31 @@ class DB_Wrapper:
             conn.commit()
             return new_game_id
     
+
+    def create_user(self, username, password, mail):
+        '''creates a nuser with the given data'''
+        hashed_pw = generate_password_hash(password)
+        new_user_id = None                                   
+        with self.engine.begin() as conn:
+            result = conn.execute(sqlalchemy.insert(self.user_table),
+            {
+                "name" : username, "password" : hashed_pw, "mail_address" : mail
+            })
+            #pdb.set_trace()
+            new_user_id = result.inserted_primary_key.id
+
+            conn.commit()
+            return new_user_id
+        
+    def get_user(self, username=None, pid=None):
+        if username is not None:
+            with self.engine.begin() as conn:
+                result = conn.execute(sqlalchemy.select(self.user_table).where(self.user_table.c.name == username)).one()
+                return User(id=result.id, username=result.name, password=result.password, mail=result.mail_address)
+        elif pid is not None:
+            with self.engine.begin() as conn:
+                result = conn.execute(sqlalchemy.select(self.user_table).where(self.user_table.c.name == username)).one()
+                return User(id=result.id, username=result.name, password=result.password, mail=result.mail_address)
+        else:
+            raise ValueError
+ 

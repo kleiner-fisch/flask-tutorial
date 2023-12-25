@@ -4,6 +4,8 @@ from game_controller import Game_Controller
 import game_controller
 from db_wrapper import DB_Wrapper
 
+#from Flask-HTTPAuth import HTTPBasicAuth
+from werkzeug.security import generate_password_hash, check_password_hash
 import pdb
 
 app = Flask(__name__)
@@ -16,6 +18,24 @@ id2ctrl = dict()
 
 def get_ctrl(game_id):
     return id2ctrl[game_id]
+
+
+
+
+
+app = Flask(__name__)
+
+def verify_password(username, password):
+    user = app.db.get_user(username)
+    return username == user.username and \
+            check_password_hash(user.password, password)
+
+
+
+
+
+
+
 
 
 # TODO currently the plan is to use uuid for ids. This may be unpractibable as URIs may be terribly long if we chain such ids...
@@ -37,6 +57,21 @@ def play_card(game_id, player_id, line_id, card_name):
         return e.args[0], 422 
     
 
+
+@app.post('/user')
+def create_user():
+    try:
+        content = request.json
+        mail = content.get('mail')
+        password = content.get('password')
+        username = content.get('username')
+        app.db.create_user(username, password, mail)
+        return ''
+    except (ValueError, KeyError) as e:
+        return e.args[0], 422 
+
+    
+
 @app.patch('/<int:game_id>/<int:player_id>/<int:line_id>')
 def manage_claim(game_id, player_id, line_id):
     ctrl = get_ctrl(game_id)
@@ -54,8 +89,15 @@ def manage_claim(game_id, player_id, line_id):
 def create_game():   
     try:
         content = request.json
-        pdb.set_trace()
-        p1_pid, p2_pid = content.get('player1_id'), content.get('player2_id')
+        username = content.get('username')
+        password = content.get('password')
+        if not verify_password(username, password):
+            return 'Authentification error', 401
+
+        user1 = app.db.get_user(username)
+        user2 = app.db.get_user(content.get('username_other'))
+
+        p1_pid, p2_pid = user1.id, user2.id
         starting_player = content.get('starting_player', None)
         game_id = app.db.create_game(p1_pid, p2_pid, starting_player)
         return jsonify({'game_id': game_id})

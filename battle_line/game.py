@@ -3,6 +3,7 @@ import itertools as iter
 import random
 from line import Line
 from cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS
+from invalid_user_input_error import  InvalidUserInputError
 
 HAND_SIZE = 7
 
@@ -16,10 +17,10 @@ class Game:
                  claim=dict(), unresolved_scout=False,
                  winner=None, public_cards=[],
                  lines = []):
-        self.current_player = starting_player or p0
         self.game_id = game_id
         self.p0 = p0
         self.p1 = p1
+        self.current_player = self.get_starting_player(starting_player)
         if p0_hand == [] and p1_hand == []:
             self.initialize_cards()
         elif p0_hand != [] and p1_hand != []:
@@ -32,6 +33,12 @@ class Game:
         self.public_cards = public_cards
         self.winner = winner
 
+    def get_starting_player(self, value):
+        if value is None: return self.p0
+        elif value == 0: return self.p0
+        elif value == 1: return self.p1
+        else:
+            raise InvalidUserInputError('Illegal starting player value given:' + str(value))
 
     def initialize_cards(self):
         self.generate_decks()
