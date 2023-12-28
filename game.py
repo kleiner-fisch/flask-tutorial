@@ -12,6 +12,7 @@ HAND_SIZE = 7
 class Game:
 
     # TODO rename variables to p1 and p2 globally
+    # TODO starting_player instead should be current_player
     def __init__(self, p0, p1, game_id=None, starting_player=None,
                  p0_hand=[], p1_hand=[],
                  claim=dict(), unresolved_scout=False,
@@ -20,7 +21,7 @@ class Game:
         self.game_id = game_id
         self.p0 = p0
         self.p1 = p1
-        self.current_player = self.get_starting_player(starting_player)
+        self.current_player = starting_player or p0
         if p0_hand == [] and p1_hand == []:
             self.initialize_cards()
         elif p0_hand != [] and p1_hand != []:
@@ -33,12 +34,6 @@ class Game:
         self.public_cards = public_cards
         self.winner = winner
 
-    def get_starting_player(self, value):
-        if value is None: return self.p0
-        elif value == 0: return self.p0
-        elif value == 1: return self.p1
-        else:
-            raise InvalidUserInputError('Illegal starting player value given:' + str(value))
 
     def initialize_cards(self):
         self.generate_decks()
@@ -61,3 +56,10 @@ class Game:
         return self.hands[player_id]
     
 
+    def __repr__(self) -> str:
+        return repr({'p0':self.p0, 'p1':self.p1, 'game_id': self.game_id, 'starting_player':self.current_player,
+                     'p0_hand':self.hands[self.p0], 'p1_hand':self.hands[self.p1],
+                     'claim':self.claim, 'unresolved_scout': self.unresolved_scout,
+                     'public_cards':self.public_cards,
+                     'winner':self.winner,
+                     'lines':self.lines})

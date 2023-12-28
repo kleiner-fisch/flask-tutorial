@@ -54,6 +54,21 @@ with LINE being
 
 ** 404 NOT FOUND if user is not authorized
 
+#### Get Hand
+* Path: `/{game-id}/hand`
+* Method: GET
+* Body: 
+** ```{
+        "username" : "sefie",
+        "password" : "abc"
+    }```
+
+##### Response
+* HTTP Status
+** 200 OK if action was succesful
+*** Body: `{ "cards" : ["ALEXANDER","C1"]}`
+
+** 404 NOT FOUND if user is not authorized
 
 #### Play a card
 * Path: `/{game-id}/card/{player-id}/{line-id}/{card-name}`
@@ -109,14 +124,18 @@ with LINE being
 
 #### Draw/Put back cards
 This either happens at the end of the turn, when a single card is drawn, or because SCOUT has been played, when first 3 cards are drawn, and afterwards two cards are put back. This is the only case where cards are put back.
-* Path: `/{gameID}/hands/{playerID}`
+* Path: `/{gameID}/hands`
 * Method: PATCH
 * Body: Examples
 ** ```{
+        "username" : "sefie",
+        "password" : "abc",
         "putBackCards": ["CARD1", "CARD2"],
         "playerID" : 1,
     }```
 **  ```{
+        "username" : "sefie",
+        "password" : "abc",
         "drawTacticsCards": 2,
         "drawNumberCards": 1,
         "playerID" : 1,
@@ -135,11 +154,14 @@ This either happens at the end of the turn, when a single card is drawn, or beca
 
 ### Manually Playing Around
 
-- Get the state of the game with id 0 (only the state known to both players): `curl -X GET http://127.0.0.1:5000/0`
-- Getting the current hand: `curl -X GET http://127.0.0.1:5000/0/hands/0`
-- Put back some cards onto a stack from a hand: `curl -X PATCH http://127.0.0.1:5000/0/hands/0   -H 'Content-Type: application/json'   -d '{"put_back":["Y1", "Alexander"]}'`
-- Draw some tactic cards: `curl -X PATCH http://127.0.0.1:5000/0/hands/0   -H 'Content-Type: application/json'   -d '{"num_tactic_cards":1}'`
-- Play a number card: `curl -X PATCH http://127.0.0.1:5000/0/card/0/0/F7   -H 'Content-Type: application/json'   -d '{}'`
+- Get the state of the game with id 0 (only the state known to both players): `curl -X GET http://127.0.0.1:5000/game/1`
+- Getting the current hand: `curl -X GET http://127.0.0.1:5000/game/3/hand -H 'Content-Type: application/json'   -d '{"username": "sefie3", "password":"abc"}'`
+- Put back some cards onto a stack from a hand: `curl -X PATCH http://127.0.0.1:5000/game/3/hand/0   -H 'Content-Type: application/json'   -d '{"username": "sefie3", "password":"abc", "put_back":["Y1", "Alexander"]}'`
+- Draw some tactic cards: `curl -X PATCH http://127.0.0.1:5000/0/hand/0   -H 'Content-Type: application/json'   -d '{"num_tactic_cards":1}'`
+- Play a number card:  `curl -X PATCH http://127.0.0.1:5000/game/1/0   -H 'Content-Type: application/json'   -d '{"username": "sefie3", "password":"abc", "card":"A5"}'`
 - Play a guile tactic: `curl -X PATCH http://127.0.0.1:5000/0/card/0/1/DESERTER   -H 'Content-Type: application/json'   -d '{"affected_card":"SHIELD_BEARER"}'`
+- Create a new user: `curl -X POST http://127.0.0.1:5000/user   -H 'Content-Type: application/json'   -d '{"password":"abc", "username": "sefie", "mail": "mail"}'`
+- Create a new game: `curl -X POST http://127.0.0.1:5000/game   -H 'Content-Type: application/json'   -d '{"username": "sefie3", "password":"abc", "username_other":"sefie"}'`
+
 
 

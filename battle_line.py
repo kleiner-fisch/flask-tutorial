@@ -45,13 +45,23 @@ def verify_password(username, password):
 # TODO game creation
 # TODO winning of game
 
-@app.patch('/<int:game_id>/card/<int:player_id>/<int:line_id>/<string:card_name>')
-def play_card(game_id, player_id, line_id, card_name):
-    ctrl = get_ctrl(game_id)
+@app.patch('/game/<int:game_id>/<int:line_id>')
+def play_card(game_id, line_id):
     try:
+        # TODO should rename line_id to line_number to avoid confusion
         content = request.json
+        password = content.get('password')
+        username = content.get('username')
+        if not verify_password(username, password):
+            return 'Authentification error', 401
+        user = app.db.get_user(username)
+        card = content.get('card')
         other_card = content.get('affected_card', None)
-        ctrl.play_card(player_id, line_id, card_name, other_card)
+        
+        game = app.db.get_game(game_id)
+        ctrl = Game_Controller(game)
+        ctrl.play_card(user.id, line_id, card, other_card)
+        app.db.store_game(game)
         return ''
     except ValueError as e:
         return e.args[0], 422 
@@ -88,6 +98,7 @@ def manage_claim(game_id, player_id, line_id):
 @app.post('/game')
 def create_game():   
     try:
+        #pdb.set_trace()
         content = request.json
         username = content.get('username')
         password = content.get('password')
@@ -98,6 +109,7 @@ def create_game():
         user2 = app.db.get_user(content.get('username_other'))
 
         p1_pid, p2_pid = user1.id, user2.id
+        # TODO inconsistent that I expect a player ID for starting player..
         starting_player = content.get('starting_player', None)
         game_id = app.db.create_game(p1_pid, p2_pid, starting_player)
         return jsonify({'game_id': game_id})
@@ -111,18 +123,38 @@ def get_game(game_id):
     schema = Game_Schema()
     return schema.dump(game)
 
-@app.get('/<int:game_id>/hands/<int:player_id>')
-def get_hand(game_id, player_id):
-    ctrl = get_ctrl(game_id)
-    return jsonify(ctrl.get_hand(player_id))
-
-@app.patch('/<int:game_id>/hands/<int:player_id>')
-def update_hand(game_id, player_id):
-    ctrl = get_ctrl(game_id)
+@app.get('/game/<int:game_id>/hand')
+def get_hand(game_id):
     content = request.json
-    ctrl.put_cards_back(content.get('put_back', []), player_id)
-    ctrl.draw_tactics(content.get('num_tactic_cards', 0), player_id)
-    ctrl.draw_numbers(content.get('num_number_cards', 0), player_id)
+    username = content.get('username')
+    password = content.get('password')
+    if not verify_password(username, password):
+        return 'Authentification error', 401
+    game = app.db.get_game(game_id)
+    user = app.db.get_user(username)
+
+    return jsonify(game.hands[user.id])
+
+@app.patch('/game/<int:game_id>/hand')
+def update_hand(game_id):
+    # TODO its strange that we need to provide both pid and username
+    content = request.json
+    username = content.get('username')
+    password = content.get('password')
+    if not verify_password(username, password):
+        return 'Authentification error', 401
+    
+    # TODO need to check if the action is permitted 
+    game = app.db.get_game(game_id)
+    ctrl = Game_Controller(game)
+
+    user = app.db.get_user(username)
+    
+    # TODO when we put cards back we need to remember the top cards of the stack!
+    ctrl.put_cards_back(content.get('put_back', []), user.id)
+    ctrl.draw_tactics(content.get('num_tactic_cards', 0), user.id)
+    ctrl.draw_numbers(content.get('num_number_cards', 0), user.id)
+    app.db.store_game(game)
     return ''
 
 

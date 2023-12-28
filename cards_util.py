@@ -9,6 +9,7 @@ NUMBERS_CARDS = list(map(''.join, \
                     ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"])))
 
 JOKERS = ["ALEXANDER", "CAVALRY", "DARIUS", "SHIELD_BEARER"]
+ALL_CARDS = ALL_TACTICS + NUMBERS_CARDS
 
 def get_type(c):
     return c[0]

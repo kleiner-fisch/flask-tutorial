@@ -2,9 +2,10 @@
 
 class Line:
 
-    def __init__(self, p0, p1):
+    def __init__(self, p0, p1, id=None, won_by=None):
         self.sides = {p0:[], p1:[]}
-        self.won_by = None
+        self.won_by = won_by
+        self.id=id
 
     def remove_card(self, card):
         for side in self.sides.values():
@@ -22,4 +23,7 @@ class Line:
     
     def is_open(self):
         return self.won_by == None
+    
+    def __repr__(self) -> str:
+        return repr({'won_by':self.won_by, 'sides': repr(self.sides)})
     

@@ -3,8 +3,7 @@ from cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS, JOKERS
 import cards_util
 from invalid_user_input_error import InvalidUserInputError
 import random
-
-import uuid
+import pdb
 
 
 def create_game(p1_pid, p2_pid, starting_player=None):
@@ -21,11 +20,8 @@ class Game_Controller:
     If invalid input is received the corresponding player loses the game. 
     Input validty is evaluated very strictly, even (in any way) incorrect counter examples to claims are invalid inputs.'''
 
-    def __init__(self, p0, p1, game_id=None):
-        '''for easier debugging we allow passing game_id
-        TODO: how should game_ids be properly handled??'''
-        game_id = game_id if game_id != None else uuid.uuid4()
-        self.game = Game(p0, p1, game_id)
+    def __init__(self, game):
+        self.game = game
 
     def get_other_player(self, player_id):
         if self.game.p0 == player_id:
@@ -149,35 +145,43 @@ class Game_Controller:
             self.game.winner = other_player_id
             raise InvalidUserInputError("provided counter example uses illegal card." \
                                         "Either planned with already used card, or a tactics card")
-
+        
+    def get_used_cards(self):
+        '''returns all cards handed out to players, i.e. all cards _not_ part of a deck anymore'''
+        public_cards = sum([line.get_all_cards() for line in self.game.lines], [])
+        public_cards += self.game.public_cards
+        hands = self.game.hands[self.game.p0] + self.game.hands[self.game.p1] 
+        return public_cards + hands
     
 
     def put_cards_back(self, cards, pid):
         '''takes the given cards from the player and puts them back into thei respective decks.
         Input assumed to be validated already!'''
-        g = self.game
-        g.hands[pid] = [c for c in g.hands[pid] if c not in cards]
-        g.numbers_deck =  [c for c in cards if c in g.numbers_deck ] + \
-            g.numbers_deck
-        g.tactics_deck =  [c for c in cards if c in g.tactics_deck ] + \
-            g.tactics_deck
+        self.game.hands[pid] = [c for c in self.game.hands[pid] if c not in cards]
+        
+    def get_numbers_deck(self):
+        '''returns the numbers deck, that is all numbers cards without those already handed out to players'''
+        return [c for c in NUMBERS_CARDS if c not in self.get_used_cards()]
+
+    def get_tactics_deck(self):
+        '''returns the tactics deck, that is all tactics cards without those already handed out to players'''
+        return [c for c in ALL_TACTICS if c not in self.get_used_cards()]
+
 
     def draw_tactics(self, no_cards, pid):
         '''draws the number of cards from the tactics deck and gives them the given player
         Note that cards are drown from the start of the deck!
         Input assumed to be validated already!'''
-        g  = self.game
-        g.hands[pid] = g.hands[pid] + g.tactics_deck[:no_cards]
-        g.tactics_deck = g.tactics_deck[no_cards:]
+        new_cards = random.sample(self.get_tactics_deck(), no_cards)
+        self.game.hands[pid] = self.game.hands[pid] + new_cards
 
 
     def draw_numbers(self, no_cards, pid):
         '''draws the number of cards from the numbers deck and gives them the given player
         Note that cards are drown from the start of the deck!
         Input assumed to be validated already!'''
-        g = self.game
-        g.hands[pid] = g.hands[pid] + g.numbers_deck[:no_cards]
-        g.numbers_deck = g.numbers_deck[no_cards:]
+        new_cards = random.sample(self.get_numbers_deck(), no_cards)
+        self.game.hands[pid] = self.game.hands[pid] + new_cards
 
     def get_hand(self, player_id):
         return self.game.hands[player_id]
