@@ -1,5 +1,8 @@
 
 
+### Usage
+To start the server from the directory of this readme run `flask --app battle_line run --debug`.
+
 
 ### Requirements
 The following versions of packages are used:
@@ -7,13 +10,6 @@ The following versions of packages are used:
 - marshmallow==3.20.1
 - parameterized==0.9.0
 - SQLAlchemy==2.0.23
-
-### Open Questions
-#### Usage of Endpoints
-In the method call PATCH `/{gameID}/card/{player-id}/{line-id}/{card-name}` there is no actual ressource `card-name` at the given endpoint, instead the URI has parameters that I use to perform the update.
-To me this seems like an unclean implementation of the REST API pattern.
-However, as I am a beginner with the REST API pattern, I leave this at it is to dig deeper into the topic.
-
 
 
 

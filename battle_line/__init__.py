@@ -33,13 +33,8 @@ def create_app(test_config=None):
         app.config.from_mapping(test_config)
 
     # ensure the instance folder exists
-    if not os.path.isdir(app.instance_path):
-        os.makedirs(app.instance_path, exist_ok=False)
+    os.makedirs(app.instance_path, exist_ok=True)
 
-    try:
-        os.makedirs(app.instance_path)
-    except OSError:
-        pass
 
     from . import db_wrapper
 

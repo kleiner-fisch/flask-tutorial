@@ -3,8 +3,8 @@ from marshmallow import Schema, fields
 
 class Game_Schema(Schema):
 
-    p0 = fields.Int()
     p1 = fields.Int()
+    p2 = fields.Int()
     game_id = fields.Int()
     current_player = fields.Bool()
 

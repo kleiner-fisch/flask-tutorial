@@ -2,9 +2,8 @@
 
 class Line:
 
-    def __init__(self, p0, p1, id=None, won_by=None):
-        # TODO replace the card lists by sets? If yes, also do for card hands, public cards
-        self.sides = {p0:[], p1:[]}
+    def __init__(self, p1, p2, id=None, won_by=None):
+        self.sides = {p1:[], p2:[]}
         self.won_by = won_by
         self.id=id
 
@@ -27,7 +26,9 @@ class Line:
     
     def __eq__(self, other) -> bool:
         if isinstance(other, self.__class__):
-            return self.__dict__ == other.__dict__
+            result = self.id == other.id and self.won_by == other.won_by 
+            tmp = list(self.sides.values())
+            return result and set(tmp[0]) == set(tmp(1))
         else:
             return False
     

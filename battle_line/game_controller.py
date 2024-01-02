@@ -8,8 +8,8 @@ import pdb
 
 def create_game(p1_pid, p2_pid, starting_player=None):
         '''creates a new game while choosing a random starting plaer if none is given'''
-        starting_player = starting_player or random.sample([p1_pid, p2_pid], 1)[0]
-        return Game(p1_pid, p2_pid, starting_player=starting_player)
+        starting_player = starting_player or random.choice([p1_pid, p2_pid])
+        return Game(p1_pid, p2_pid, current_player=starting_player)
 
 
 class Game_Controller:
@@ -24,10 +24,10 @@ class Game_Controller:
         self.game = game
 
     def get_other_player(self, player_id):
-        if self.game.p0 == player_id:
+        if self.game.p1 == player_id:
+            return self.game.p2
+        elif self.game.p2 == player_id:
             return self.game.p1
-        elif self.game.p1 == player_id:
-            return self.game.p0
         else:
             # ValueError is used for internal errors
             raise ValueError('received unexpected player_id: '+ str(player_id))
@@ -41,7 +41,7 @@ class Game_Controller:
         '''This method validates the received data and stores that a claim was made'''
         self.validate_make_claim(player_id, line_id)
         self.game.claim['player_id'] = player_id
-        self.game.claim['line_id'] = line_id
+        self.game.claim['line_number'] = line_id
 
     def reject_claim(self, player_id, counter_example):
         '''we assume <counter_example> has a sequence of cards serving as a legal counter example to the existing claim.
@@ -49,7 +49,7 @@ class Game_Controller:
         '''
         self.validate_reject_claim(player_id, counter_example)
         # in the validity test we already ensured that the counter example is valid, i.e. is stronger
-        line_id = self.game.claim['line_id']        
+        line_id = self.game.claim['line_number']        
         self.game.lines[line_id].won_by = player_id
         self.game.claim.clear()
 
@@ -60,7 +60,7 @@ class Game_Controller:
         if player_id != self.get_other_player(claiming_player):
             raise InvalidUserInputError("unexpected game action")
          # in the validity test we already ensured that the counter example is valid, i.e. is stronger
-        line_id = self.game.claim['line_id']        
+        line_id = self.game.claim['line_number']        
         self.game.lines[line_id].won_by = claiming_player
         self.game.claim.clear()
 
@@ -162,7 +162,7 @@ class Game_Controller:
         '''returns all cards handed out to players, i.e. all cards _not_ part of a deck anymore'''
         public_cards = sum([line.get_all_cards() for line in self.game.lines], [])
         public_cards += self.game.public_cards
-        hands = self.game.hands[self.game.p0] + self.game.hands[self.game.p1] 
+        hands = self.game.hands[self.game.p1] + self.game.hands[self.game.p2] 
         return public_cards + hands
     
 

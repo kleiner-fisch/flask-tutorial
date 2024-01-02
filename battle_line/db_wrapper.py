@@ -93,13 +93,12 @@ class DB_Wrapper:
             Column("id", Integer, primary_key=True, autoincrement=True),
             Column("p1_pid", ForeignKey("user_account.id"), nullable=False),    
             Column("p2_pid", ForeignKey("user_account.id"), nullable=False),    
-            # True if p1 is current player, False if p2 is current player
-            Column("p1_is_current_player", Boolean, nullable=False),    
+            Column("current_player", ForeignKey("user_account.id"), nullable=False),    
             #
             # Claim
             Column("p1_has_claim", Boolean, nullable=False),
             Column("p2_has_claim", Boolean, nullable=False),
-            Column("claimed_line_id", Integer, nullable=True),
+            Column("claimed_line_number", Integer, nullable=True),
             #
             Column("unresolved_scout", Boolean, nullable=False),
             #
@@ -109,7 +108,7 @@ class DB_Wrapper:
             #
             # winner
             Column("game_finished", Boolean, nullable=False),
-            Column("p1_is_winning_player", Boolean, nullable=True),
+            Column("winning_player", ForeignKey("user_account.id"), nullable=True),
         )
 
         self.metadata_obj.create_all(self.engine, checkfirst=True)
@@ -118,7 +117,6 @@ class DB_Wrapper:
 
     def get_game(self, game_id):
         '''gets the game with the given <game_id> from the database and assembles the data into a game object and returns it'''
-        # TODO the current_player field is currently a mess. Sometimes it is a pid, sometimes a boolean to be understood as p1==current_player
         game_stmt = sqlalchemy.select(self.game_table).where(self.game_table.c.id == game_id)
         hand_cards_stmt = sqlalchemy.select(self.hand_card_table).where(self.hand_card_table.c.game_id == game_id)
         with self.engine.begin() as conn:
@@ -126,9 +124,17 @@ class DB_Wrapper:
             hand_p1, hand_p2 = self.parse_hands(conn.execute(hand_cards_stmt), 
                                         game_result.p1_pid, game_result.p2_pid)
             lines = self.load_lines(game_id, game_result.p1_pid, game_result.p2_pid, conn)
-            game = Game(game_result.p1_pid, game_result.p2_pid, game_result.id,
-                    p0_hand=hand_p1, p1_hand=hand_p2,
-                        lines=lines)
+            if game_result.p1_has_claim:
+                claim = {'player_id' : game_result.p1_pid, 'line_number':game_result.claimed_line_number }
+                pass
+            elif game_result.p2_has_claim:
+                claim = {'player_id' : game_result.p2_pid, 'line_number':game_result.claimed_line_number }
+            else:
+                claim=dict()
+            game = Game(p1=game_result.p1_pid, p2=game_result.p2_pid, current_player=game_result.id,
+                    p1_hand=hand_p1, p2_hand=hand_p2, claim=claim,
+                        lines=lines, unresolved_scout=game_result.unresolved_scout)
+            # TODO here we should also load the winner, whether scout is open and open claims
             return game
 
     def parse_hands(self, db_result, p1_pid, p2_pid):
@@ -166,7 +172,7 @@ class DB_Wrapper:
         with self.engine.begin() as conn:
             result = conn.execute(sqlalchemy.insert(self.game_table),
             {
-                "p1_pid" : game.p0, "p2_pid" : game.p1, "p1_is_current_player" : game.current_player==game.p0,
+                "p1_pid" : game.p1, "p2_pid" : game.p2, "current_player" : game.current_player,
                 "p1_has_claim" :False, "p2_has_claim" : False,
                 "unresolved_scout" : False, "game_finished" : False, 
             })
@@ -185,14 +191,13 @@ class DB_Wrapper:
        with self.engine.begin() as conn:
             stmt = sqlalchemy.update(self.game_table).where(self.game_table.c.id == game.game_id)
             claim_pid = game.claim.get('player_id', None)
-            winner = None if game.winner == None else game.winner == game.p0  
             result = conn.execute(stmt,
             {
-                "p1_pid" : game.p0, "p2_pid" : game.p1, "p1_is_current_player" : game.current_player == game.p0,
-                "p1_has_claim" : claim_pid == game.p0, "p2_has_claim" : claim_pid == game.p1,
-                "claimed_line_id" : game.claim.get('line_id', None),
+                "p1_pid" : game.p1, "p2_pid" : game.p2, "current_player" : game.current_player,
+                "p1_has_claim" : claim_pid == game.p1, "p2_has_claim" : claim_pid == game.p2,
+                "claimed_line_number" : game.claim.get('line_number', None),
                 "unresolved_scout" : game.unresolved_scout, 
-                "game_finished" : game.winner != None, "p1_is_winning_player" : winner
+                "game_finished" : game.winner is None, "winning_player" : game.winner
             })
             # HAND CARDS
 
@@ -239,7 +244,7 @@ class DB_Wrapper:
     def insert_line_cards_stmt(self, game):
         line_cards = lambda pid: [{"line_id": line.id, "pid" : pid, "card" : c} 
                     for line in game.lines for c in line.sides[pid]]
-        line_cards = sum([line_cards(pid) for pid in [game.p0, game.p1]], [])
+        line_cards = sum([line_cards(pid) for pid in [game.p1, game.p2]], [])
         return sqlalchemy.insert(self.line_card_table), line_cards
 
 
@@ -256,8 +261,8 @@ class DB_Wrapper:
 
     def insert_hand_cards_stmt(self, game):
         '''creates an insert statement for the hand cards and collects the values to insert'''
-        hand_cards_p1 = [{"game_id" : game.game_id, "pid" : game.p0, "card" : c} for c in game.hands[game.p0]]
-        hand_cards_p2 = [{"game_id" : game.game_id, "pid" : game.p1, "card" : c} for c in game.hands[game.p1]]
+        hand_cards_p1 = [{"game_id" : game.game_id, "pid" : game.p1, "card" : c} for c in game.hands[game.p1]]
+        hand_cards_p2 = [{"game_id" : game.game_id, "pid" : game.p2, "card" : c} for c in game.hands[game.p2]]
         return sqlalchemy.insert(self.hand_card_table), hand_cards_p1 + hand_cards_p2
 
 
