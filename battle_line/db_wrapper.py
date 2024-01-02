@@ -1,17 +1,19 @@
 import sqlalchemy
 import pdb
-from game import Game 
-from line import Line
-import game_controller
+from .game import Game 
+from .line import Line
+from . import game_controller
 from flask import current_app, g
 import click
-from user import User
+from .user import User
 
 
 from sqlalchemy import MetaData
 from sqlalchemy import Table, Column, Integer, String, Boolean
 from sqlalchemy import ForeignKey, bindparam
 from sqlalchemy import create_engine
+
+from flask import current_app
 
 from werkzeug.security import check_password_hash, generate_password_hash
 
@@ -26,13 +28,22 @@ from werkzeug.security import check_password_hash, generate_password_hash
 # F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, 
 # ALEXANDER, DARIUS, CAVALRY, SHIELD_BEARER, FOG, MUD, SCOUT, REDEPLOY, DESERTER, TRAITOR
 
-
+def get_db():
+    if 'db' not in g:
+        g.db = DB_Wrapper()
+    return g.db    
 
 class DB_Wrapper:
 
 
     def __init__(self):
-        self.engine = create_engine("sqlite+pysqlite:///battle_line.db", echo=True)
+        # TODO currently these tables are created for every request, instead of always using the same DB_Wrapper object. 
+        #   Not sure if this is expensive
+        url= "sqlite+pysqlite:///" + current_app.config['DATABASE_URL']
+        echo=current_app.config.get('DATABASE_ECHO', True)
+        self.engine = create_engine(url, echo=echo)
+
+#        self.engine = create_engine("sqlite+pysqlite:///battle_line.db", echo=True)
 
         self.metadata_obj = MetaData()
 
@@ -101,7 +112,7 @@ class DB_Wrapper:
             Column("p1_is_winning_player", Boolean, nullable=True),
         )
 
-        self.metadata_obj.create_all(self.engine)
+        self.metadata_obj.create_all(self.engine, checkfirst=True)
 
 
 

@@ -1,4 +1,4 @@
-from line_schema import Line_Schema
+from .line_schema import Line_Schema
 from marshmallow import Schema, fields
 
 class Game_Schema(Schema):

@@ -85,17 +85,20 @@ with LINE being
 ** 404 NOT FOUND if user is not authorized
 ** 422 UNPROCCESSABLE ENTITY if user is authorized but data is invalid, or move is illegal. Causes the player to lose.
 
-
-#### Make and Reject/Accept Claims
+#### Reject/Accept Claims
 **TOBEDONE**
 
-* Path: `/{gameID}/{player-id}/{line-id}`
+* Path: `/game/{gameID}`
 * Method: PATCH
 * Body: Examples:
 ** ```{
-        "action": "CLAIM"
+        "username" : "sefie",
+        "password" : "abc",    
+        "action": "ACCEPT_CLAIM"
     }```
 ** ```{
+        "username" : "sefie",
+        "password" : "abc",
         "action": "REJECT_CLAIM",
         "counterExample": ["CARD1", "CARD2", "CARD3"]
     }```
@@ -107,18 +110,25 @@ with LINE being
     {
         "lineID": 2, "wonBy": 0
     }```
-*** If there is a stronger line possible than the provided counter example. Body: ```
-    {
-        "lineID": 2,
-        "wonBy": 1,
-        "counterCounterExample": ["B10", "B9", "B8"]
+** 404 NOT FOUND if user is not authorized
+** 422 UNPROCCESSABLE ENTITY if user is authorized but data is invalid, or move is illegal. Causes the player to lose.
+
+
+#### Make Claims
+**TOBEDONE**
+
+* Path: `/game/{gameID}/{line-id}`
+* Method: PATCH
+* Body: Examples:
+** ```{
+        "username" : "sefie",
+        "password" : "abc",    
+        "action": "MAKE_CLAIM"
     }```
-*** If the counter example is invalid because at least one card is not available anymore. Body: ```
-    {
-        "lineID": 2,
-        "wonBy": 1,
-        "unavailableCards": ["B10", "B9"]
-    }```
+
+##### Response
+* HTTP Status
+** 200 OK if action was succesful
 ** 404 NOT FOUND if user is not authorized
 ** 422 UNPROCCESSABLE ENTITY if user is authorized but data is invalid, or move is illegal. Causes the player to lose.
 
@@ -159,8 +169,9 @@ This either happens at the end of the turn, when a single card is drawn, or beca
 - Getting the current hand: `curl -X GET http://127.0.0.1:5000/game/3/hand -H 'Content-Type: application/json'   -d '{"username": "sefie3", "password":"abc"}'`
 - Put back some cards onto a stack from a hand: `curl -X PATCH http://127.0.0.1:5000/game/3/hand   -H 'Content-Type: application/json'   -d '{"username": "sefie", "password":"abc", "put_back":["A1", "ALEXANDER"]}'`
 - Draw some tactic cards: `curl -X PATCH http://127.0.0.1:5000/game/3/hand   -H 'Content-Type: application/json'   -d '{"num_tactic_cards":3, "username": "sefie", "password":"abc"}''`
-- Play a number card:  `curl -X PATCH http://127.0.0.1:5000/game/1/0   -H 'Content-Type: application/json'   -d '{"username": "sefie3", "password":"abc", "card":"A5"}'`
-- Play a guile tactic: `curl -X PATCH http://127.0.0.1:5000/game/3/7   -H 'Content-Type: application/json'   -d '{"username": "sefie", "password":"abc", "card":"REDEPLOY", "affected_card":"C5"}'`
+- Play a number card:  `curl -X PATCH http://127.0.0.1:5000/game/1/0   -H 'Content-Type: application/json'   -d '{"username": "sefie3", "password":"abc", "card":"A5", "action":"PLAY_CARD"}'`
+- Play a guile tactic: `curl -X PATCH http://127.0.0.1:5000/game/3/7   -H 'Content-Type: application/json'   -d '{"username": "sefie", "password":"abc", "card":"REDEPLOY", "affected_card":"C5", "action":"PLAY_CARD"}'`
+- Claim a line: `curl -X PATCH http://127.0.0.1:5000/game/3/7   -H 'Content-Type: application/json'   -d '{"username": "sefie", "password":"abc", "action":"MAKE_CLAIM"}'`
 
 #### Out of Game Commands
 - Create a new user: `curl -X POST http://127.0.0.1:5000/user   -H 'Content-Type: application/json'   -d '{"password":"abc", "username": "sefie", "mail": "mail"}'`

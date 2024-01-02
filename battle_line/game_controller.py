@@ -1,7 +1,7 @@
-from game import Game
-from cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS, JOKERS
-import cards_util
-from invalid_user_input_error import InvalidUserInputError
+from .game import Game
+from .cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS, JOKERS
+from . import cards_util
+from .invalid_user_input_error import InvalidUserInputError
 import random
 import pdb
 
@@ -36,20 +36,34 @@ class Game_Controller:
     def get_game_id(self):
         return self.game.game_id
 
-    def manage_claim(self, player_id, line_id, action, counter_example):
-        '''claim interactions are: MAKE_CLAIM and REJECT_CLAIM
-        For REJECT_CLAIM we assume <counter_example> has a sequence of cards serving as a legal counter example to the existing claim.
-        For MAKE_CLAIM <counter_example> should be set to None
+
+    def make_claim(self, player_id, line_id):
+        '''This method validates the received data and stores that a claim was made'''
+        self.validate_make_claim(player_id, line_id)
+        self.game.claim['player_id'] = player_id
+        self.game.claim['line_id'] = line_id
+
+    def reject_claim(self, player_id, counter_example):
+        '''we assume <counter_example> has a sequence of cards serving as a legal counter example to the existing claim.
         This method validates the received data.
         '''
-        self.validate_claim_inputs(player_id, line_id, action, counter_example)
-        if action == 'MAKE_CLAIM':
-            self.game.claim['player_id'] = player_id
-            self.game.claim['line_id'] = line_id
-        else:
-            # in the validity test we already ensured that the counter example is valid, i.e. is stronger
-            self.game.lines[line_id].won_by = player_id
-            self.check_winner(player_id)
+        self.validate_reject_claim(player_id, counter_example)
+        # in the validity test we already ensured that the counter example is valid, i.e. is stronger
+        line_id = self.game.claim['line_id']        
+        self.game.lines[line_id].won_by = player_id
+        self.game.claim.clear()
+
+    def accept_claim(self, player_id):
+        '''sets that the the claimed line is won by the claiming player
+        '''
+        claiming_player = self.game.claim['player_id']
+        if player_id != self.get_other_player(claiming_player):
+            raise InvalidUserInputError("unexpected game action")
+         # in the validity test we already ensured that the counter example is valid, i.e. is stronger
+        line_id = self.game.claim['line_id']        
+        self.game.lines[line_id].won_by = claiming_player
+        self.game.claim.clear()
+
 
     def check_winner(self, player_id):
         '''checks if the player has won, and if yes, records the winner in the game state'''
@@ -57,29 +71,8 @@ class Game_Controller:
         won_5_lines = sum(won_lines) >= 5
         won_3_adjacent_lines = any([won_lines[line_id] and won_lines[line_id+1] and won_lines[line_id+2]
                                     for line_id in range(9 - 2)])
-        if won_5_lines or won_3_adjacent_lines:
-            self.game.winner = player_id
+        return won_5_lines or won_3_adjacent_lines
 
-    def validate_claim_inputs(self, player_id, line_id, action, counter_example):
-        '''Validates that 
-        - the player is performing the expected action (REJECT_CLAIM if there exists a claim by the other player, otherwise MAKE_CLAIM)
-        - For MAKE_CLAIM, 
-            - it is this players turn
-        -   - the claimed line is open (not won by either player)
-            - that the claiming player has a complete line (3 or 4 cards)
-        - For REJECT_CLAIM 
-            - The other player made a claim
-            - that the counter_example size is valid
-                - If MUD has been played in this line, than the counter_example must have 4 cards, otherwise 3 cards
-            - that the counter_example is an extension of the rejecting players side of that line (played_cards + playable_cards)
-            - that the playerable_cards only involve number cards'''
-        if action == "REJECT_CLAIM":
-            self.validate_reject_claim(player_id, line_id, action, counter_example)
-        elif action == 'MAKE_CLAIM':
-            self.validate_make_claim(player_id, line_id, action, counter_example)
-        else:
-            self.game.winner = self.get_other_player(player_id)
-            raise InvalidUserInputError("invalid manage_claim action: " + action)
 
     def validate_formation_complete(self, player_id, line_id, formation):
         is_muddy = self.game.lines[line_id].contains("MUD")
@@ -90,21 +83,40 @@ class Game_Controller:
                                         "muddy flag: " + str(is_muddy))
 
 
-    def validate_make_claim(self, player_id, line_id, action, counter_example):
+    def validate_make_claim(self, player_id, line_id):
+        ''' - it is this players turn
+            - the claimed line is open (not won by either player)
+            - that the claiming player has a complete line (3 or 4 cards)'''
         if self.game.current_player != player_id:
             self.game.winner = self.get_other_player(player_id)
             raise InvalidUserInputError("You can only make a claim on your turn.")
         if not self.game.lines[line_id].is_open():
             self.game.winner = self.get_other_player(player_id)
-            raise InvalidUserInputError("The claimed line already is closed.")    
-        if not counter_example == None:
-            self.game.winner = self.get_other_player(player_id)
-            raise InvalidUserInputError("Not expecting a value for the counter example.")   
-        formation = [c for c in self.game.lines[line_id] if c in JOKERS + NUMBERS_CARDS]
+            raise InvalidUserInputError("The claimed line already is closed.")     
+        line_cards = self.game.lines[line_id].sides[player_id]
+        formation = [c for c in line_cards if c in JOKERS + NUMBERS_CARDS]
         self.validate_formation_complete(player_id, line_id, formation)
 
+    def turn_done(self, pid):
+        '''finishes the turn for this player and makes it the next players turn'''
+        other_pid = self.get_other_player(pid)
+        if self.check_winner(pid): 
+            self.game.winner = pid
+            return
+        if self.check_winner(other_pid): 
+            self.game.winner = other_pid
+            return
+        self.game.current_player = not self.game.current_player 
 
-    def validate_reject_claim(self, player_id, line_id, action, counter_example):
+
+    def validate_reject_claim(self, player_id, counter_example):
+        '''Validates that 
+            - The other player made a claim
+            - that the counter_example size is valid
+                - If MUD has been played in this line, than the counter_example must have 4 cards, otherwise 3 cards
+            - that the counter_example is an extension of the rejecting players side of that line (played_cards + playable_cards)
+            - that the playerable_cards only involve number cards'''
+        line_id = self.game.claim['line_id']
         other_player_id = self.get_other_player(player_id)
         if self.game.claim.get('player_id', None) != other_player_id:
             self.game.winner = other_player_id

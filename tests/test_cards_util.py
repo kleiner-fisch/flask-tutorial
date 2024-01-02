@@ -1,7 +1,11 @@
+import battle_line
+
 import unittest
-import cards_util
+from battle_line import cards_util
 from parameterized import parameterized
 import pdb
+
+
 
 sf_mid_j=  ['DARIUS', 'A5', 'A4']
 

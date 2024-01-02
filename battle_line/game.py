@@ -1,9 +1,9 @@
 
 import itertools as iter
 import random
-from line import Line
-from cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS
-from invalid_user_input_error import  InvalidUserInputError
+from .line import Line
+from .cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS
+from .invalid_user_input_error import  InvalidUserInputError
 
 HAND_SIZE = 7
 
@@ -63,3 +63,9 @@ class Game:
                      'public_cards':self.public_cards,
                      'winner':self.winner,
                      'lines':self.lines})
+    
+    def __eq__(self, other) -> bool:
+        if isinstance(other, self.__class__):
+            return self.__dict__ == other.__dict__
+        else:
+            return False
