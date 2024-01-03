@@ -57,7 +57,7 @@ class Game:
                      claim=self.claim, scout=self.unresolved_scout,
                      public_cards=self.public_cards,
                      winner=self.winner,
-                     lines=self.lines)
+                     lines=repr(self.lines))
     
     def __eq__(self, other) -> bool:
         fetcher = operator.attrgetter("p1", "p2", "game_id", "current_player", "hands", "claim", "unresolved_scout", "public_cards", "winner", "lines")
