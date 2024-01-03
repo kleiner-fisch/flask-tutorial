@@ -24,9 +24,11 @@ class TestCards_Util(unittest.TestCase):
 
 
     def test_create_game(self):
+        '''attempts to create a game to check if it works without errors'''
         gm.create_game(1, 2)
 
     def test_put_cards_back(self):
+        '''tests if putting back cards will leave players with expected hands'''
         ctrl = gm.Game_Controller(self.game1)
         p1 = self.game1.p1
         p2 = self.game1.p2
@@ -36,6 +38,13 @@ class TestCards_Util(unittest.TestCase):
         ctrl.put_cards_back(cards, 1)
         assert set(self.game1.hands[p1]) == remaining_cards_p1
         assert set(self.game1.hands[p2]) == remaining_cards_p2
+
+    def test_action_sequence1(self):
+        ''''''
+        ctrl = gm.Game_Controller(self.game1)
+        p1 = self.game1.p1
+        p2 = self.game1.p2
+
 
 
     

@@ -160,6 +160,7 @@ class Game_Controller:
         
     def get_used_cards(self):
         '''returns all cards handed out to players, i.e. all cards _not_ part of a deck anymore'''
+        pdb.set_trace()
         public_cards = sum([line.get_all_cards() for line in self.game.lines], [])
         public_cards += self.game.public_cards
         hands = self.game.hands[self.game.p1] + self.game.hands[self.game.p2] 

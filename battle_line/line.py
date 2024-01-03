@@ -2,8 +2,8 @@
 
 class Line:
 
-    def __init__(self, p1, p2, id=None, won_by=None):
-        self.sides = {p1:[], p2:[]}
+    def __init__(self, sides, id=None, won_by=None):
+        self.sides = sides
         self.won_by = won_by
         self.id=id
 
@@ -27,11 +27,11 @@ class Line:
     def __eq__(self, other) -> bool:
         if isinstance(other, self.__class__):
             result = self.id == other.id and self.won_by == other.won_by 
-            tmp = list(self.sides.values())
-            return result and set(tmp[0]) == set(tmp(1))
+            return result and self.sides == other.sides
         else:
             return False
     
-    # def __repr__(self) -> str:
-    #     return repr({'won_by':self.won_by, 'sides': repr(self.sides)})
+    def __repr__(self) -> str:
+        clsname = self.__class__.__name__
+        return '{}({}, {}, {})'.format(clsname, self.sides, self.id, self.won_by)
     

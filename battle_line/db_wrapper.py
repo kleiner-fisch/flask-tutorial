@@ -152,7 +152,7 @@ class DB_Wrapper:
         lines_result = conn.execute(get_lines_stmt)
         lines = [None]*9
         for row in lines_result:
-            lines[row.line_number]= Line(p1_pid, p2_pid, row.id, row.winner)
+            lines[row.line_number]= Line(sides={p1_pid:[], p2_pid:[]}, id=row.id, won_by=row.winner)
         # then we load the cards ... 
         stmt = sqlalchemy.select(self.line_table, self.line_card_table)\
                 .join(self.line_card_table, self.line_table.c.id == self.line_card_table.c.line_id)\
