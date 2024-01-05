@@ -10,18 +10,23 @@ The following versions of packages are used:
 - marshmallow==3.20.1
 - parameterized==0.9.0
 - SQLAlchemy==2.0.23
+- pytest==7.4.0
 
 
 
 ### Endpoints
 
-Create game etc
-
-* `/game`
+#### Create game
+Requires authentification data of the creating player. The other player for now is not asked, and the game is simply created. If no starting player is provided, the starting player is choosen randomly.
+TODO: Currently the starting player can be set by providing the corresponding players ID in a starting_player field. But the ID is supposed to be internal only...
+* Path: `/game`
+* Method: POST
+* Body: ```{"username": "bob", "password":"abc", "username_other":"alice"}```
 
 
 #### Get Game State
-* Path: `/{game-id}`
+All games are public. Hence, everybody can get the state of any game and there is no authentification.
+* Path: `/game/{game-id}`
 * Method: GET
 * Body: No body
 
@@ -51,7 +56,7 @@ with LINE being
 ** 404 NOT FOUND if user is not authorized
 
 #### Get Hand
-* Path: `/{game-id}/hand`
+* Path: `/game/{game-id}/hand`
 * Method: GET
 * Body: 
 ** ```{
@@ -62,16 +67,28 @@ with LINE being
 ##### Response
 * HTTP Status
 ** 200 OK if action was succesful
-*** Body: `{ "cards" : ["ALEXANDER","C1"]}`
+*** Body: `{ ["ALEXANDER","C1"]}`
 
 ** 404 NOT FOUND if user is not authorized
 
 #### Play a card
-* Path: `/{game-id}/card/{player-id}/{line-id}/{card-name}`
+* Path: `/game/{game-id}/{line-id}`
 * Method: PATCH
 * Body: Examples:
-** For most cards: ```{}```
-** For some tactics (for DESERTER and REDEPLOY the specified card is taken from its current line, and put to the line where DESERTER/REDEPLOY has been played): ```{
+* Body: Examples:
+** 
+    ```{
+        "username" : "sefie",
+        "password" : "abc",    
+        "action": "PLAY_CARD",
+        "card" :"A5"
+    }```
+** For some tactics (for DESERTER and REDEPLOY the specified card is taken from its current line, and put to the line where DESERTER/REDEPLOY has been played): 
+```{
+        "username" : "sefie",
+        "password" : "abc",    
+        "action": "PLAY_CARD",
+        "card" :"DESERTER"
         "affected_card": "CARD_NAME",
     }```
 
@@ -130,21 +147,19 @@ with LINE being
 
 #### Draw/Put back cards
 This either happens at the end of the turn, when a single card is drawn, or because SCOUT has been played, when first 3 cards are drawn, and afterwards two cards are put back. This is the only case where cards are put back.
-* Path: `/{gameID}/hands`
+* Path: `/game/{gameID}/hand`
 * Method: PATCH
 * Body: Examples
 ** ```{
         "username" : "sefie",
         "password" : "abc",
-        "putBackCards": ["CARD1", "CARD2"],
-        "playerID" : 1,
+        "put_back": ["CARD1", "CARD2"],
     }```
 **  ```{
         "username" : "sefie",
         "password" : "abc",
-        "drawTacticsCards": 2,
-        "drawNumberCards": 1,
-        "playerID" : 1,
+        "num_tactic_cards": 2,
+        "num_number_cards": 1,
     }```
 
 ##### Response
