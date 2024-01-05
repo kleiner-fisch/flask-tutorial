@@ -6,11 +6,14 @@ from .db_wrapper import DB_Wrapper
 from .invalid_user_input_error import InvalidUserInputError
 import os
 
-#from Flask-HTTPAuth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
 import pdb
 
 
+# TODO JSON assumes dict-keys to be strings. 
+#   We sometimes have ids as dict-keys, and the keys are integers...
+#   This is an unpleasent inconsistency, that requires special handling
+#   Is there a way around this?
 
 
 
@@ -53,31 +56,7 @@ def create_app(test_config=None):
     #   - uuid as ids would require to use uuid as type in the path, i.e. use <uuid:game_id>
 
 
-    # TODO game creation
-    # TODO winning of game
-
-    @app.patch('/game/<int:game_id>/<int:line_id>')
-    def play_card(game_id, line_id):
-        db = db_wrapper.get_db()
-        try:
-            # TODO should rename line_id to line_number to avoid confusion
-            content = request.json
-            password = content.get('password')
-            username = content.get('username')
-            if not verify_password(username, password):
-                return 'Authentification error', 401
-            user = db.get_user(username)
-            card = content.get('card')
-            other_card = content.get('affected_card', None)
-            
-            game = db.get_game(game_id)
-            ctrl = Game_Controller(game)
-            ctrl.play_card(user.id, line_id, card, other_card)
-            db.store_game(game)
-            return ''
-        except ValueError as e:
-            return e.args[0], 422 
-        
+    # TODO winning of game. Cleanup after winning, adding archive db etc
 
 
     @app.post('/user')
@@ -163,6 +142,11 @@ def create_app(test_config=None):
                 return 'Authentification error', 401
 
             user1 = db.get_user(username)
+
+            # TODO it would be nice to be able to send a game state to the server.
+            #   As I dont have user priveliges perhaps add a "debugging-endpoint", where such extra behaviors is suported?
+                
+
             user2 = db.get_user(content.get('username_other'))
 
             p1_pid, p2_pid = user1.id, user2.id
@@ -217,10 +201,3 @@ def create_app(test_config=None):
         return ''
         
     return app
-
-
-
-# if __name__ == "__main__":
-#     # app.run(host='0.0.0.0', debug=True)
-#     app = create_app()
-#     app.run(host='localhost', debug=True)

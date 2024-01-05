@@ -39,6 +39,7 @@ class DB_Wrapper:
     def __init__(self):
         # TODO currently these tables are created for every request, instead of always using the same DB_Wrapper object. 
         #   Not sure if this is expensive
+        #pdb.set_trace()
         url= "sqlite+pysqlite:///" + current_app.config['DATABASE_URL']
         echo=current_app.config.get('DATABASE_ECHO', True)
         self.engine = create_engine(url, echo=echo)
@@ -131,7 +132,7 @@ class DB_Wrapper:
                 claim = {'player_id' : game_result.p2_pid, 'line_number':game_result.claimed_line_number }
             else:
                 claim=dict()
-            game = Game(p1=game_result.p1_pid, p2=game_result.p2_pid, current_player=game_result.id,
+            game = Game(game_id=game_result.id, p1=game_result.p1_pid, p2=game_result.p2_pid, current_player=game_result.id,
                     p1_hand=hand_p1, p2_hand=hand_p2, claim=claim,
                         lines=lines, unresolved_scout=game_result.unresolved_scout)
             # TODO here we should also load the winner, whether scout is open and open claims
