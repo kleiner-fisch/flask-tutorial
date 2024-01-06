@@ -8,7 +8,8 @@ import pdb
 
 def create_game(p1_pid, p2_pid, starting_player=None):
         '''creates a new game while choosing a random starting plaer if none is given'''
-        starting_player = starting_player or random.choice([p1_pid, p2_pid])
+        if starting_player is None:
+            starting_player = random.choice([p1_pid, p2_pid])
         return Game(p1_pid, p2_pid, current_player=starting_player)
 
 

@@ -6,7 +6,7 @@ class Game_Schema(Schema):
     p1 = fields.Int()
     p2 = fields.Int()
     game_id = fields.Int()
-    current_player = fields.Bool()
+    current_player = fields.Int()
 
     lines = fields.List(fields.Nested(Line_Schema()))
     public_cards = fields.List(fields.Str())

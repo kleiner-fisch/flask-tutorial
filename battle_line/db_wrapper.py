@@ -132,7 +132,7 @@ class DB_Wrapper:
                 claim = {'player_id' : game_result.p2_pid, 'line_number':game_result.claimed_line_number }
             else:
                 claim=dict()
-            game = Game(game_id=game_result.id, p1=game_result.p1_pid, p2=game_result.p2_pid, current_player=game_result.id,
+            game = Game(game_id=game_result.id, p1=game_result.p1_pid, p2=game_result.p2_pid, current_player=game_result.current_player,
                     p1_hand=hand_p1, p2_hand=hand_p2, claim=claim,
                         lines=lines, unresolved_scout=game_result.unresolved_scout)
             # TODO here we should also load the winner, whether scout is open and open claims

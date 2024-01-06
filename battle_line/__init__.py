@@ -52,10 +52,6 @@ def create_app(test_config=None):
                 check_password_hash(user.password, password)
 
 
-    # TODO currently the plan is to use uuid for ids. This may be unpractibable as URIs may be terribly long if we chain such ids...
-    #   - uuid as ids would require to use uuid as type in the path, i.e. use <uuid:game_id>
-
-
     # TODO winning of game. Cleanup after winning, adding archive db etc
 
 
@@ -134,7 +130,6 @@ def create_app(test_config=None):
         #   It would be better to have only one connection, and make sure it is closed after the request (or during an error)
         db = db_wrapper.get_db()
         try:
-            #pdb.set_trace()
             content = request.json
             username = content.get('username')
             password = content.get('password')
@@ -146,13 +141,15 @@ def create_app(test_config=None):
             # TODO it would be nice to be able to send a game state to the server.
             #   As I dont have user priveliges perhaps add a "debugging-endpoint", where such extra behaviors is suported?
                 
+            other_username = content.get('username_other')
+            user2 = db.get_user(other_username)
 
-            user2 = db.get_user(content.get('username_other'))
-
-            p1_pid, p2_pid = user1.id, user2.id
-            # TODO inconsistent that I expect a player ID for starting player..
+            name2pid = {username : user1.id, other_username : user2.id}
             starting_player = content.get('starting_player', None)
-            game_id = db.create_game(p1_pid, p2_pid, starting_player)
+            starting_player_pid  = None
+            if starting_player is not None:
+                starting_player_pid = name2pid[starting_player]
+            game_id = db.create_game(user1.id, user2.id, starting_player_pid)
             return jsonify({'game_id': game_id})
         except ValueError as e:
             return e.args[0], 422 

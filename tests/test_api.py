@@ -36,7 +36,7 @@ def runner(app):
     return app.test_cli_runner()
 
 
-def test_create_game(client):
+def test_create_game1(client):
     '''tests whether we can create a game and then get it'''
     body1 = {'mail':'mail', 'password':'abc','username':'bob'}
     client.post("/user", json=body1)
@@ -50,6 +50,21 @@ def test_create_game(client):
     # We check whether the game is in the db
     game_get_response = client.get('/game/{}'.format(1))
     assert game_get_response.status_code == 200
+    
+
+def test_create_game2(client):
+    '''tests whether we can create a game and then get it, while providing a starting player'''
+    body1 = {'mail':'mail', 'password':'abc','username':'bob'}
+    client.post("/user", json=body1)
+    body2 = {'mail':'mail', 'password':'abc','username':'alice'}
+    client.post("/user", json=body2)
+    create_game_body = {"username": "bob", "password":"abc", "username_other":"alice", 
+                        "starting_player":"alice"}
+    game_post_response = client.post("/game", json=create_game_body).json
+    game_id=game_post_response['game_id']
+    # We check whether the game is in the db
+    game_json = client.get('/game/{}'.format(game_id)).json
+    assert game_json['current_player'] == game_json['p2'], 'We expect alice to be the starting player'
 
 def test_play_card(client):
     '''tests if we can play a card'''
