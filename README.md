@@ -32,145 +32,169 @@ All games are public. Hence, everybody can get the state of any game and there i
 
 ##### Response
 * HTTP Status
-** 200 OK if action was succesful
-*** Body: 
-{
-  "claim": {},
-  "current_player": 0,
-  "game_id": 0,
-  "lines": [ LINE ],
-  "p0": 0,
-  "p1": 1,
-  "public_cards": [],
-  "unresolved_scout": false
-}
-with LINE being 
-    {
-      "sides": {
-        "0": ["A4", "ALEXANDER"],
-        "1": []
-      },
-      "won_by": null
-    }
+  * 200 OK if action was succesful
+    * Body:
+      ```
+      {
+        "claim": {},
+        "current_player": 0,
+        "game_id": 0,
+        "lines": [ LINE ],
+        "p0": 0,
+        "p1": 1,
+        "public_cards": [],
+        "unresolved_scout": false
+      }
+      ```
+      
+      with LINE being
+      ```
+      {
+        "sides": {
+          "0": ["A4", "ALEXANDER"],
+          "1": []
+        },
+        "won_by": null
+      }
+      ```
 
-** 404 NOT FOUND if user is not authorized
+  * 404 NOT FOUND if user is not authorized
 
 #### Get Hand
 * Path: `/game/{game-id}/hand`
 * Method: GET
 * Body: 
-** ```{
-        "username" : "sefie",
-        "password" : "abc"
-    }```
+  ```
+  {
+          "username" : "sefie",
+          "password" : "abc"
+  }
+  ```
 
 ##### Response
 * HTTP Status
-** 200 OK if action was succesful
-*** Body: `{ ["ALEXANDER","C1"]}`
+  * 200 OK if action was succesful
+    * Body: `{ ["ALEXANDER","C1"]}`
 
-** 404 NOT FOUND if user is not authorized
+  * 404 NOT FOUND if user is not authorized
 
 #### Play a card
 * Path: `/game/{game-id}/{line-id}`
 * Method: PATCH
 * Body: Examples:
 * Body: Examples:
-** ```{
+    ```
+    {
         "username" : "sefie",
         "password" : "abc",    
         "action": "PLAY_CARD",
         "card" :"A5"
-    }```
-** For some tactics (for DESERTER and REDEPLOY the specified card is taken from its current line, and put to the line where DESERTER/REDEPLOY has been played): 
-```{
-        "username" : "sefie",
-        "password" : "abc",    
-        "action": "PLAY_CARD",
-        "card" :"DESERTER"
-        "affected_card": "CARD_NAME",
-    }```
+    }
+    ```
+  * For some tactics (for DESERTER and REDEPLOY the specified card is taken from its current line, and put to the line where DESERTER/REDEPLOY has been played): 
+    ```
+    {
+            "username" : "sefie",
+            "password" : "abc",    
+            "action": "PLAY_CARD",
+            "card" :"DESERTER"
+            "affected_card": "CARD_NAME",
+    }
+    ```
 
 ##### Response
 * HTTP Status
-** 200 OK if action was succesful
-** 404 NOT FOUND if user is not authorized
-** 422 UNPROCCESSABLE ENTITY if user is authorized but data is invalid, or move is illegal. Causes the player to lose.
+  * 200 OK if action was succesful
+  * 404 NOT FOUND if user is not authorized
+  * 422 UNPROCCESSABLE ENTITY if user is authorized but data is invalid, or move is illegal. Causes the player to lose.
 
 #### Reject/Accept Claims
-**TOBEDONE**
+Rejecting and accepting claims are global game actions. 
 
 * Path: `/game/{gameID}`
 * Method: PATCH
 * Body: Examples:
-** ```{
+  ```
+  {
         "username" : "sefie",
         "password" : "abc",    
         "action": "ACCEPT_CLAIM"
-    }```
-** ```{
+  }
+  ```
+  ```
+  {
         "username" : "sefie",
         "password" : "abc",
         "action": "REJECT_CLAIM",
-        "counterExample": ["CARD1", "CARD2", "CARD3"]
-    }```
+        "counter_example": ["CARD1", "CARD2", "CARD3"]
+  }
+  ```
 
 ##### Response
 * HTTP Status
-** 200 OK if action was succesful
-*** Body: ```
+  * 200 OK if action was succesful
+  * Body:
+    ```
     {
         "lineID": 2, "wonBy": 0
-    }```
-** 404 NOT FOUND if user is not authorized
-** 422 UNPROCCESSABLE ENTITY if user is authorized but data is invalid, or move is illegal. Causes the player to lose.
+    }
+    ```
+  * 404 NOT FOUND if user is not authorized
+  * 422 UNPROCCESSABLE ENTITY if user is authorized but data is invalid, or move is illegal. Causes the player to lose.
 
 
 #### Make Claims
-**TOBEDONE**
+Make claim is a line action.
 
 * Path: `/game/{gameID}/{line-id}`
 * Method: PATCH
 * Body: Examples:
-** ```{
+  ```
+  {
         "username" : "sefie",
         "password" : "abc",    
         "action": "MAKE_CLAIM"
-    }```
+  }
+  ```
 
 ##### Response
 * HTTP Status
-** 200 OK if action was succesful
-** 404 NOT FOUND if user is not authorized
-** 422 UNPROCCESSABLE ENTITY if user is authorized but data is invalid, or move is illegal. Causes the player to lose.
+  * 200 OK if action was succesful
+  * 404 NOT FOUND if user is not authorized
+  * 422 UNPROCCESSABLE ENTITY if user is authorized but data is invalid, or move is illegal. Causes the player to lose.
 
 #### Draw/Put back cards
 This either happens at the end of the turn, when a single card is drawn, or because SCOUT has been played, when first 3 cards are drawn, and afterwards two cards are put back. This is the only case where cards are put back.
 * Path: `/game/{gameID}/hand`
 * Method: PATCH
 * Body: Examples
-** ```{
+  ```
+  {
         "username" : "sefie",
         "password" : "abc",
         "put_back": ["CARD1", "CARD2"],
-    }```
-**  ```{
+  }
+  ```
+  ```
+  {
         "username" : "sefie",
         "password" : "abc",
         "num_tactic_cards": 2,
         "num_number_cards": 1,
-    }```
+  }
+  ```
 
 ##### Response
 * HTTP Status
-** 200 OK if action was succesful
-*** Body (The resulting hand): ```
-    {
-        ["CARD1", ...]
-    }
-    ```
-** 404 NOT FOUND if user is not authorized
-** 422 UNPROCCESSABLE ENTITY if user is authorized but data is invalid, or move is illegal. Causes the player to lose.
+  * 200 OK if action was succesful
+    * Body (The resulting hand):
+      ```
+      {
+          ["CARD1", ...]
+      }
+      ```
+  * 404 NOT FOUND if user is not authorized
+  * 422 UNPROCCESSABLE ENTITY if user is authorized but data is invalid, or move is illegal. Causes the player to lose.
 
 ### Manually Playing Around
 
