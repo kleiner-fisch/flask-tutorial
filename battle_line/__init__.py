@@ -5,6 +5,9 @@ from . import game_controller
 from .db_wrapper import DB_Wrapper
 from .invalid_user_input_error import InvalidUserInputError
 import os
+from .game import Game
+from .line import Line
+from . import game_util
 
 from werkzeug.security import generate_password_hash, check_password_hash
 import pdb
@@ -63,8 +66,8 @@ def create_app(test_config=None):
             mail = content.get('mail')
             password = content.get('password')
             username = content.get('username')
-            db.create_user(username, password, mail)
-            return ''
+            pid = db.create_user(username, password, mail)
+            return jsonify({'pid': pid})
         except (ValueError, KeyError) as e:
             return e.args[0], 422 
 
@@ -126,6 +129,12 @@ def create_app(test_config=None):
 
     @app.post('/game')
     def create_game():   
+        '''creates a new game.
+        - DEBUGGING and TESTING: allows to create a new game in an arbitrary state, as provided in the request body
+                Allows to send an arbitrary game state to the server.
+                    The game_id should not be set, to avoid collisions with existing games
+        - Otherwise a new game is created with the given other player
+        Currently there is no checking whether the other player wants to participate in the game'''
         # TODO currently in each request several connections are made to DB.
         #   It would be better to have only one connection, and make sure it is closed after the request (or during an error)
         db = db_wrapper.get_db()
@@ -138,19 +147,31 @@ def create_app(test_config=None):
 
             user1 = db.get_user(username)
 
-            # TODO it would be nice to be able to send a game state to the server.
-            #   As I dont have user priveliges perhaps add a "debugging-endpoint", where such extra behaviors is suported?
-                
             other_username = content.get('username_other')
-            user2 = db.get_user(other_username)
+            if other_username is not None:
+                user2 = db.get_user(other_username)
 
-            name2pid = {username : user1.id, other_username : user2.id}
-            starting_player = content.get('starting_player', None)
-            starting_player_pid  = None
-            if starting_player is not None:
-                starting_player_pid = name2pid[starting_player]
-            game_id = db.create_game(user1.id, user2.id, starting_player_pid)
-            return jsonify({'game_id': game_id})
+                name2pid = {username : user1.id, other_username : user2.id}
+                starting_player = content.get('starting_player', None)
+                starting_player_pid  = None
+                if starting_player is not None:
+                    starting_player_pid = name2pid[starting_player]
+                game_id = db.create_game(user1.id, user2.id, starting_player_pid)
+                return jsonify({'game_id': game_id})
+            elif content.get('game_state') is not None:
+                # create a new game to get a fresh game ID
+                to_store = eval(content.get('game_state'))
+                if to_store.game_id is not None:
+                    raise InvalidUserInputError("invalid request. \
+                        Not expecting to get a game with an ID.")
+                game_id = db.create_game(to_store.p1, to_store.p2, to_store.current_player)
+                new_game = db.get_game(game_id)
+                game_util.copy_ids(copy_from=new_game, copy_to=to_store)
+                db.store_game(to_store)
+                return jsonify({'game_id': game_id})
+            else:
+                raise InvalidUserInputError("invalid request. \
+                        Either create a new game or provide a game state.")
         except ValueError as e:
             return e.args[0], 422 
 

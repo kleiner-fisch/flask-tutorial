@@ -4,6 +4,31 @@ import pytest
 from battle_line import create_app
 import tempfile
 import os
+from battle_line.line import Line
+from battle_line.game import Game
+from battle_line import game_util
+
+@pytest.fixture()
+def game1():
+    def _game1(pid1, pid2, current_player=None):
+        return "Game({p1}, {p2}, None, {current_player}, \
+                ['F4', 'C1', 'B7', 'C6', 'D7', 'A7', 'F1', 'C10', 'B6', 'E3'], \
+                ['E7', 'E2', 'E4', 'A1', 'F7', 'A4', 'A3'],             \
+                dict(), False, None, [], \
+                [Line(dict([({p2},  []), ({p1},  [])]), None, None), \
+                 Line(dict([({p2},  []), ({p1},  [])]), None, None), \
+                 Line(dict([({p2},  []), ({p1},  [])]), None, None), \
+                 Line(dict([({p2},  ['F10', 'F9']), ({p1},  [])]), None, None), \
+                 Line(dict([({p2},  ['E9', 'E8']), ({p1},  [])]), None, None), \
+                 Line(dict([({p2},  ['D10', 'D9', 'D8']), ({p1},  [])]), None, None), \
+                 Line(dict([({p1},  ['B10', 'B9']), ({p2},  [])]), None, None), \
+                 Line(dict([({p1},  ['C9', 'C8']), ({p2},  [])]), None, None), \
+                 Line(dict([({p1},  ['A10', 'A9', 'A8']), ({p2},  [])]), \
+                      None, None)])".format(p1=pid1, p2=pid2, current_player=(pid1 if current_player is None else current_player))
+
+
+
+    return _game1
 
 @pytest.fixture()
 def app():
@@ -66,6 +91,27 @@ def test_create_game2(client):
     game_json = client.get('/game/{}'.format(game_id)).json
     assert game_json['current_player'] == game_json['p2'], 'We expect alice to be the starting player'
 
+def test_create_game3(client, game1):
+    '''tests whether we can instantiate a game with a predefined state'''
+    body1 = {'mail':'mail', 'password':'abc','username':'bob'}
+    pid1=client.post("/user", json=body1).json['pid']
+    body2 = {'mail':'mail', 'password':'abc','username':'alice'}
+    pid2=client.post("/user", json=body2).json['pid']
+    game_state = game1(pid1, pid2)
+    create_game_body = {"username": "bob", "password":"abc", "game_state": game_state}
+    game_post_response = client.post("/game", json=create_game_body)
+    game_id = game_post_response.json['game_id']
+    new_game = client.get('/game/{}'.format(game_id)).json
+    org_game = eval(game_state)
+    loaded_game = game_util.game_from_json(new_game)
+    # the returns json object does not have line_ids or a game_
+    assert game_util.weakly_equal(org_game, loaded_game), \
+        "We expect the original version, and the stored and then retrieved games to be equal, except for game_id and line_ids"
+
+
+
+
+
 def test_play_card(client):
     '''tests if we can play a card'''
     # create game
@@ -110,12 +156,9 @@ def test_play_card(client):
             assert len(line['sides'][str(p2)]) == 0, 'We expect the other lines to be empty, for both sides'
 
 
-
-
-    
-
-
-
-
+# TODO create test cases:
+#   - where we do several turns 
+#   - make/reject a claim --> Here ctreating an arbitrary state would be helpful
+#   - win the game
 
 
