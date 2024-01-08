@@ -31,7 +31,5 @@ def game_from_json(game):
         line['sides'][pid1] = line['sides'].pop(str(pid1))
         line['sides'][pid2] = line['sides'].pop(str(pid2))
     game['lines']=[Line(line['sides'], line['won_by']) for line in game['lines']]
-    # TODO currently always when we create a game we create hand for it. 
-    #   Seems cleaner to only generate a hand upon explicit request
     return Game(**game)
 

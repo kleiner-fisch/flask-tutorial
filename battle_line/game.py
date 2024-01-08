@@ -1,14 +1,5 @@
 import operator
-import itertools as iter
-import random
 from .line import Line
-from .cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS
-from .invalid_user_input_error import  InvalidUserInputError
-
-import pdb
-
-HAND_SIZE = 7
-
 
 
 class Game:
@@ -22,27 +13,13 @@ class Game:
         self.p1 = p1
         self.p2 = p2
         self.current_player = current_player or p1
-        if p1_hand == [] and p2_hand == []:
-            self.initialize_cards()
-        elif p1_hand != [] and p2_hand != []:
-            self.hands = {self.p1: p1_hand, self.p2 : p2_hand}
-        else:
-            raise ValueError("got unpexepcted hand. p1 hand : " + str(p1_hand) + " p2_hand: " +str(p2_hand))
+        self.hands = {self.p1: p1_hand, self.p2 : p2_hand}
         self.claim = claim
         self.unresolved_scout = unresolved_scout
         self.lines = lines or [Line(sides={p1:[], p2:[]}) for x in range(9)]
         self.public_cards = public_cards
         self.winner = winner
 
-
-    def initialize_cards(self):
-        self.deal_cards()
-
-    def deal_cards(self):
-        self.hands = dict()
-        cards = random.sample(NUMBERS_CARDS, HAND_SIZE * 2)
-        self.hands[self.p1] = cards[:HAND_SIZE]
-        self.hands[self.p2] = cards[HAND_SIZE:2*HAND_SIZE]
 
     def get_hand(self, player_id):
         return self.hands[player_id]

@@ -4,13 +4,23 @@ from . import cards_util
 from .invalid_user_input_error import InvalidUserInputError
 import random
 import pdb
+from .cards_util import ALL_TACTICS, NUMBERS_CARDS, GUILE_TACTICS
+import itertools as iter
+
+HAND_SIZE = 7
+
 
 
 def create_game(p1_pid, p2_pid, starting_player=None):
         '''creates a new game while choosing a random starting plaer if none is given'''
         if starting_player is None:
             starting_player = random.choice([p1_pid, p2_pid])
-        return Game(p1_pid, p2_pid, current_player=starting_player)
+        game = Game(p1_pid, p2_pid, current_player=starting_player)
+        ctrl = Game_Controller(game)
+        ctrl.initialize_cards()
+        return game
+        
+
 
 
 class Game_Controller:
@@ -24,6 +34,15 @@ class Game_Controller:
     def __init__(self, game, seed=None):
         self.game = game
         random.seed(seed)
+
+    def initialize_cards(self):
+        self.deal_cards()
+
+    def deal_cards(self):
+        self.game.hands = dict()
+        cards = random.sample(NUMBERS_CARDS, HAND_SIZE * 2)
+        self.game.hands[self.game.p1] = cards[:HAND_SIZE]
+        self.game.hands[self.game.p2] = cards[HAND_SIZE:2*HAND_SIZE]
 
     def get_other_player(self, player_id):
         if self.game.p1 == player_id:
