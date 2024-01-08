@@ -102,8 +102,11 @@ def test_create_game3(client, game1):
     game_post_response = client.post("/game", json=create_game_body)
     game_id = game_post_response.json['game_id']
     new_game = client.get('/game/{}'.format(game_id)).json
+    hand_p1 = client.get('/game/{}/hand'.format(game_id), json={'password':'abc','username':'bob'}).json
+    hand_p2 = client.get('/game/{}/hand'.format(game_id), json={'password':'abc','username':'alice'}).json
     org_game = eval(game_state)
     loaded_game = game_util.game_from_json(new_game)
+    loaded_game.hands = {pid1 : hand_p1, pid2 : hand_p2}
     # the returns json object does not have line_ids or a game_
     assert game_util.weakly_equal(org_game, loaded_game), \
         "We expect the original version, and the stored and then retrieved games to be equal, except for game_id and line_ids"

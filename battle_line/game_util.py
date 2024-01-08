@@ -12,9 +12,7 @@ def copy_ids(copy_from, copy_to):
 
 def weakly_equal(g1, g2):
     '''checks whether two games are equal, ignoring game IDs and line IDs''' 
-    game_attr = operator.attrgetter("p1", "p2", "current_player", "claim", "unresolved_scout", "public_cards", "winner")
-
-    #game_attr = operator.attrgetter("p1", "p2", "current_player", "hands", "claim", "unresolved_scout", "public_cards", "winner")
+    game_attr = operator.attrgetter("p1", "p2", "current_player", "hands", "claim", "unresolved_scout", "public_cards", "winner")
     lines1 = [(line.sides, line.won_by) for line in g1.lines]
     lines2 = [(line.sides, line.won_by) for line in g2.lines]
     result =  game_attr(g1) == game_attr(g2)
@@ -24,7 +22,7 @@ def game_from_json(game):
     '''creates a game object from a json serialization of it.
     In the json serialization integer dictionary keys are stores as strings. 
     This method fixes that.
-    does not modify the original input obhject'''
+    does not modify the original input object'''
     game = json.loads(json.dumps(game))
     pid1, pid2 = game['p1'], game['p2']
     for line in game['lines']:
