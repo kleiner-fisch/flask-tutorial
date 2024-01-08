@@ -76,8 +76,7 @@ with LINE being
 * Method: PATCH
 * Body: Examples:
 * Body: Examples:
-** 
-    ```{
+** ```{
         "username" : "sefie",
         "password" : "abc",    
         "action": "PLAY_CARD",

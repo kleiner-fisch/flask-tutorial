@@ -125,18 +125,23 @@ class DB_Wrapper:
             hand_p1, hand_p2 = self.parse_hands(conn.execute(hand_cards_stmt), 
                                         game_result.p1_pid, game_result.p2_pid)
             lines = self.load_lines(game_id, game_result.p1_pid, game_result.p2_pid, conn)
-            if game_result.p1_has_claim:
-                claim = {'player_id' : game_result.p1_pid, 'line_number':game_result.claimed_line_number }
-                pass
-            elif game_result.p2_has_claim:
-                claim = {'player_id' : game_result.p2_pid, 'line_number':game_result.claimed_line_number }
-            else:
-                claim=dict()
+            claim = self.load_claim(game_result)
+            winner = game_result.winning_player
             game = Game(game_id=game_result.id, p1=game_result.p1_pid, p2=game_result.p2_pid, current_player=game_result.current_player,
                     p1_hand=hand_p1, p2_hand=hand_p2, claim=claim,
-                        lines=lines, unresolved_scout=game_result.unresolved_scout)
-            # TODO here we should also load the winner, whether scout is open and open claims
+                        lines=lines, unresolved_scout=game_result.unresolved_scout, winner=winner)
             return game
+        
+    def load_claim(self, db_result):
+        '''parses the db result into a dictionary with data about a possible claim'''
+        if db_result.p1_has_claim:
+            claim = {'player_id' : db_result.p1_pid, 'line_number':db_result.claimed_line_number }
+            pass
+        elif db_result.p2_has_claim:
+            claim = {'player_id' : db_result.p2_pid, 'line_number':db_result.claimed_line_number }
+        else:
+            claim=dict()
+        return claim
 
     def parse_hands(self, db_result, p1_pid, p2_pid):
         '''extracts the cards of the hands and partitions them into p1 and p2 players cards'''

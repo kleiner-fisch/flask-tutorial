@@ -7,21 +7,22 @@ import os
 from battle_line.line import Line
 from battle_line.game import Game
 from battle_line import game_util
+from battle_line import cards_util
 
 @pytest.fixture()
 def game1():
     def _game1(pid1, pid2, current_player=None):
         return "Game({p1}, {p2}, None, {current_player}, \
-                ['F4', 'C1', 'B7', 'C6', 'D7', 'A7', 'F1', 'C10', 'B6', 'E3'], \
-                ['E7', 'E2', 'E4', 'A1', 'F7', 'A4', 'A3'],             \
+                ['F4', 'C1', 'B7', 'C7', 'D6', 'A7', 'F1'], \
+                ['E7', 'E2', 'E4', 'A1', 'F7', 'F8', 'A3'],             \
                 dict(), False, None, [], \
                 [Line(dict([({p2},  []), ({p1},  [])]), None, None), \
                  Line(dict([({p2},  []), ({p1},  [])]), None, None), \
                  Line(dict([({p2},  []), ({p1},  [])]), None, None), \
                  Line(dict([({p2},  ['F10', 'F9']), ({p1},  [])]), None, None), \
                  Line(dict([({p2},  ['E9', 'E8']), ({p1},  [])]), None, None), \
-                 Line(dict([({p2},  ['D10', 'D9', 'D8']), ({p1},  [])]), None, None), \
                  Line(dict([({p1},  ['B10', 'B9']), ({p2},  [])]), None, None), \
+                 Line(dict([({p2},  ['D7', 'D2', 'D8']), ({p1},  [])]), None, None), \
                  Line(dict([({p1},  ['C9', 'C8']), ({p2},  [])]), None, None), \
                  Line(dict([({p1},  ['A10', 'A9', 'A8']), ({p2},  [])]), \
                       None, None)])".format(p1=pid1, p2=pid2, current_player=(pid1 if current_player is None else current_player))
@@ -110,6 +111,88 @@ def test_create_game3(client, game1):
     # the returns json object does not have line_ids or a game_
     assert game_util.weakly_equal(org_game, loaded_game), \
         "We expect the original version, and the stored and then retrieved games to be equal, except for game_id and line_ids"
+
+
+def test_action_sequence1(client, game1):
+    '''tests whether we can instantiate a game with a predefined state'''
+    # First we create the game
+    alice=  {'password':'abc','username':'alice'}
+    bob = {'password':'abc','username':'bob'}
+    pid1=client.post("/user", json=bob | {'mail':'mail'}).json['pid']
+    pid2=client.post("/user", json=alice | {"mail":"mail"}).json['pid']
+    game_state = game1(pid1, pid2)
+    game_post_response = client.post("/game", json=bob | {"game_state": game_state})
+    game_id = game_post_response.json['game_id']
+    # play a card
+    card1 = "C7"
+    game_path = '/game/{game_id}'.format(game_id=game_id)
+    line_path = lambda line_number: '{}/{}'.format(game_path, line_number)
+    hand_path = game_path + '/hand'
+    client.patch(line_path(7), json=bob | { "card":card1, "action":"PLAY_CARD"})
+    hand_p1 = client.get(hand_path, json=bob).json
+    assert card1 not in hand_p1, "we expect the card we just played not to be in our hand"
+    assert len(hand_p1) == 6, "we just played a card, so we should have 7 cards now"
+    # draw card
+    client.patch(hand_path, json=bob | {"num_tactic_cards":1})
+    hand_p1 = client.get(hand_path, json=bob).json
+    assert sum([c in cards_util.ALL_TACTICS for c in hand_p1]) == 1, "we drew a tactics card, so we should have 1 now"
+    # make claim
+    client.patch(line_path(7), json=bob | {"action" : "MAKE_CLAIM"})
+    game = client.get(game_path).json
+    assert game['claim']['player_id'], game['claim']['line_number'] == (pid1, 7)
+    # accept claim
+    client.patch(game_path, json=alice | { "action":"ACCEPT_CLAIM"} )
+    assert game['lines'][7]['won_by'] is None, "Just to be sure that actually accepting a claim sets the won_by-bit"
+    game = client.get(game_path).json
+    assert game['lines'][7]['won_by'] == pid1
+    # turn done
+    client.patch(game_path, json=bob | { "action":"TURN_DONE"} )
+    game = client.get(game_path).json
+    assert game['current_player'] == pid2, 'as bob finished his turn, it is alices turn now'
+    # alice plays a card
+    client.patch(line_path(3), json=alice | { "card":"F8", "action":"PLAY_CARD"})
+    # draw card
+    client.patch(hand_path, json=alice | {"num_number_cards":1})
+    hand_p2 = client.get(hand_path, json=alice).json
+    assert sum([c in cards_util.NUMBERS_CARDS for c in hand_p2]) == 7, "we drew a numbers card, so we should have 7 again"
+    # make claim
+    client.patch(line_path(3), json=alice | {"action" : "MAKE_CLAIM"})
+    game = client.get(game_path).json
+    assert game['claim']['player_id'], game['claim']['line_number'] == (pid2, 3)
+    # accept claim
+    client.patch(game_path, json=bob | { "action":"ACCEPT_CLAIM"} )
+    assert game['lines'][3]['won_by'] is None, "Just to be sure that actually accepting a claim sets the won_by-bit"
+    game = client.get(game_path).json
+    assert game['lines'][3]['won_by'] == pid2
+    # make another claim
+    client.patch(line_path(6), json=alice | {"action" : "MAKE_CLAIM"})
+    # reject claim
+    body_counter_example = {'counter_example' : ["F2", "C2", "A2"], 'action' : 'REJECT_CLAIM'}
+    client.patch(game_path, json=bob | body_counter_example )
+    game = client.get(game_path).json
+    assert game['lines'][6]['won_by'] == pid1, 'as bob provided a correct counter example to alice claims, bob has won the line'
+    # turn done
+    client.patch(game_path, json=alice | { "action":"TURN_DONE"} )
+    # finish the game, 
+    client.patch(line_path(0), json=bob | { "card":'F4', "action":"PLAY_CARD"})
+    client.patch(line_path(8), json=bob | {"action" : "MAKE_CLAIM"})
+    client.patch(game_path, json=alice | { "action":"ACCEPT_CLAIM"} )
+    game_before = client.get(game_path).json
+    assert game_before['winner'] is None, 'No winner yet'
+    client.patch(game_path, json=bob | { "action":"TURN_DONE"} )
+    game_after = client.get(game_path).json
+    assert game_after['winner'] == pid1, 'bob has won 3 adjacent lines, and has won'
+
+
+
+
+# TODO should have a test with complicated tactics: REDEPLOY, SCOUT, TRAITOR
+
+
+
+# TODO currently no tests (and also no server side checking) for proper validation, 
+#   and handling of incorrect inputs and proper responses to incorrect inputs
+
 
 
 
